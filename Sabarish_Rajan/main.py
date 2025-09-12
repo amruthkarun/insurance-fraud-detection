@@ -3,17 +3,7 @@ import matplotlib as plt
 import pandas as pd
 import numpy as np
 
-df = pd.read_excel('Insuarance_fraud_claim.xlsx')
+#importing the dataset
 
-#print(df.head())
+df = pd.read_csv('C:/Users/aksme/Desktop/Insuarance_Fraud/insurance-fraud-detection/Sabarish_Rajan/fraud_oracle.csv')
 
-y = df['fraud_reported']
-
-#print(y.head())
-
-df = df.drop(columns=['fraud_reported']).copy()
-#print(df.head())
-
-is_nan = df['authorities_contacted'] == 'NaN'
-id_nan_df = df[is_nan]
-print(is_nan_df['fraud_reported'])
