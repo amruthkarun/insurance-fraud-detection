@@ -14,4 +14,6 @@ y = df['fraud_reported']
 df = df.drop(columns=['fraud_reported']).copy()
 #print(df.head())
 
-print(df[df['authorities_contacted']=='NaN']['fraud_reported'])
+is_nan = df['authorities_contacted'] == 'NaN'
+id_nan_df = df[is_nan]
+print(is_nan_df['fraud_reported'])
