@@ -69,7 +69,7 @@ df['umbrella_limit_'] = np.where(df['umbrella_limit']==0,0,1)
 
 df = df.drop('umbrella_limit', axis=1)
 
-# tataol_claim_amount has few outliers, we will remove them
+# tatal_claim_amount has few outliers, we will remove them
 Q1 = df['total_claim_amount'].quantile(0.25)
 Q3 = df['total_claim_amount'].quantile(0.75)
 IQR = Q3 - Q1
