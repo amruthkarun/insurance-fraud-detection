@@ -154,68 +154,6 @@ print('Confusion Matrix: \n', confusion_matrix(y_test, y_pred))
 end_time = time.time()
 
 print('Time taken for model training and prediction: ', round(end_time - start_time,2), 'seconds')
-'''#Feature Importance
-
-feature_importance = best_model.named_steps['classifier'].feature_importances_
-features = X.columns
-importance_df = pd.DataFrame({'Feature': features, 'Importance': feature_importance})
-importance_df = importance_df.sort_values(by='Importance', ascending=False)
-   
-print(importance_df)
-
-print('After selecting important features:')
-#using the importance_df we can drop few columns and re run the model to see if there is any change in the accuracy
-
-X = X.drop(X[importance_df[importance_df['Importance']<0.01]['Feature']], axis=1)
-
-#Splitting the data into train and test
-X_train, X_test, y_train,y_test = train_test_split(X,y, test_size = 0.2, random_state = 42, stratify = y)
-#Model Building
-
-start_time_1 = time.time()
-#Model Building
-full_pipeline = Pipeline([
-    ('scaler', StandardScaler()),
-    ('classifier', XGBClassifier(random_state = 42))#XGBClassifier
-])
-
-param_grid = {
-    'classifier__n_estimators': [100,200],
-    'classifier__max_depth': [3,5,10,20],
-    'classifier__learning_rate': [0.01, 0.05, 0.1, 0.2],
-    'classifier__subsample': [0.6, 0.8, 1.0],
-    'classifier__colsample_bytree': [0.6, 0.8, 1.0],
-    'classifier__scale_pos_weight': [3.05]
-}
-
-grid_search = GridSearchCV(
-    full_pipeline,
-    param_grid,
-    cv=5,
-    n_jobs=-1,
-    verbose=1,
-    scoring='f1',
-    refit='f1'
-)
-
-grid_search.fit(X_train, y_train)
-
-grid_search.best_params_
-
-cv_res = pd.DataFrame(grid_search.cv_results_)
-cv_res = cv_res.sort_values(by='rank_test_score', ascending=True)
-print(cv_res[['params', 'mean_test_score', 'std_test_score', 'rank_test_score']])
-
-best_model = grid_search.best_estimator_
-
-y_pred = best_model.predict(X_test)
-
-print('Classification Report: \n', classification_report(y_test, y_pred))
-print('Confusion Matrix: \n', confusion_matrix(y_test, y_pred))
-
-end_time_1 = time.time()
-
-print('Time taken for model training and prediction after feature importance: ', round(end_time_1 - start_time_1,2), 'seconds')'''
 
 #THe F1 score is 0.61 which is good considering the data is highly imbalanced. But using feature importance\
 #did not improve the score, hence we are not using it.
