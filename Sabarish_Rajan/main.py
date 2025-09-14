@@ -8,8 +8,10 @@ import plotly.graph_objects as go'''
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report, confusion_matrix
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifie, XGBoostClassifier
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import GridSearchCV
 #Importing the dataset
 
 df = pd.read_excel('C:/Users/aksme/Desktop/Insuarance_Fraud/insurance-fraud-detection/Sabarish_Rajan/Fraud_detection.xlsx')
@@ -18,16 +20,16 @@ df = df.drop_duplicates()
 df = df.replace('?', np.nan)
 
 df['authorities_contacted'] = df['authorities_contacted'].replace(np.nan, 'No')
-df['fraud_reported'] = df['fraud_reported'].replace({'Y':1, 'N':0})
-df['collision_type'].fillna(df['collision_type'].mode()[0],inplace=True)
-df['property_damage'].fillna('NO', inplace = True)
-df['police_report_available'].fillna('NO', inplace = True)
+df['fraud_reported'] = df['fraud_reported'].replace({'Y':1, 'N':0}).astype(int)
+df['collision_type'].fillna(df['collision_type'].mode()[0])
+df['property_damage'].fillna('NO')
+df['police_report_available'].fillna('NO')
 
 df_corr = df[df.dtypes[(df.dtypes == 'float64') | (df.dtypes == 'int64')].index].corr()
 
-plt.pyplot.figure(figsize=(12,10))
+'''plt.pyplot.figure(figsize=(12,10))
 sns.heatmap(df_corr, annot=True)
-plt.pyplot.show()
+plt.pyplot.show()'''
 
 
 #based on the correlation data we drop the following columns
@@ -35,11 +37,11 @@ df = df.drop(['age','insured_hobbies','auto_make', 'policy_number','injury_claim
 
 df_corr = df[df.dtypes[(df.dtypes == 'float64') | (df.dtypes == 'int64')].index].corr()
 
-plt.pyplot.figure(figsize=(12,10))
+'''plt.pyplot.figure(figsize=(12,10))
 sns.heatmap(df_corr, annot=True)
 plt.pyplot.show()
-
-print(df.info())
+'''
+#print(df.info())
 
 #Encoding categorical data
 cat_cols = df.select_dtypes(include=['object']).columns
@@ -48,7 +50,7 @@ encoded_cols = pd.DataFrame(ohe.fit_transform(df[cat_cols]), columns = ohe.get_f
 
 df = pd.concat([df, encoded_cols],axis=1)
 df = df.drop(cat_cols, axis=1)
-print(df.shape)
+#print(df.shape)
 
 #identifying outliers
 '''num_cols = df.select_dtypes(include=['int64','float64']).columns
@@ -80,3 +82,50 @@ for cols in df[col]:
     plt.pyplot.figure()
     sns.boxplot(x = df[cols])
     plt.pyplot.show()'''
+
+#getting the number of fraud and non fraud cases
+class_counts = df['fraud_reported'].value_counts()
+fraud = class_counts.loc[1.0]
+
+total_claims = len(df)
+
+print('%age of fraud classes :', round(fraud/total_claims * 100,2))
+print('% of non fraud classes :', round((total_claims - fraud)/total_claims * 100,2))
+
+
+#Splitting the dataset into the Training set and Test set
+X = df.drop('fraud_reported', axis = 1)
+y = df['fraud_reported']
+
+X_train, X_test, y_train,y_test = train_test_split(X,y, test_size = 0.2, random_state = 42, stratify = y)
+
+full_pipeline = Pipeline([
+    ('scaler', StandardScaler()),
+    ('classifier', XGBoost(random_state = 42))
+])
+
+param_grid = {
+    'classifier__n_estimators': [100, 200],
+    'classifier__max_depth': [None, 10, 20],
+    'classifier__min_samples_split': [2, 5],
+    'classifier__min_samples_leaf': [1, 2],
+    'classifier__class_weight': [None, 'balanced']
+}
+
+grid_search = GridSearchCV(
+    full_pipeline,
+    param_grid,
+    cv = 5,
+    n_jobs = -1,
+    verbose = 1,
+    scoring = 'f1',
+    refit = 'f1'
+    )
+
+grid_search.fit(X_train, y_train)
+
+grid_search.best_params_
+
+cv_res = pd.DataFrame(grid_search.cv_results_)
+cv_res = cv_res.sort_values(by='rank_test_score', ascending=True)
+print(cv_res[['params','mean_test_score','std_test_score','rank_test_score']])
