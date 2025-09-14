@@ -1,5 +1,5 @@
 #import tensorflow as tf
-import matplotlib as plt
+import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -8,10 +8,13 @@ import plotly.graph_objects as go'''
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report, confusion_matrix
-from sklearn.ensemble import RandomForestClassifie, XGBoostClassifier
+from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import RandomizedSearchCV
+from scipy.stats import randint, uniform
 #Importing the dataset
 
 df = pd.read_excel('C:/Users/aksme/Desktop/Insuarance_Fraud/insurance-fraud-detection/Sabarish_Rajan/Fraud_detection.xlsx')
@@ -97,35 +100,51 @@ print('% of non fraud classes :', round((total_claims - fraud)/total_claims * 10
 X = df.drop('fraud_reported', axis = 1)
 y = df['fraud_reported']
 
+#feature Engineering
+
+X['claim_to_premium_ratio'] = X['total_claim_amount']/(X['policy_annual_premium']+0.01)
+X['severity_of_incident']=X['total_claim_amount']/(X['witnesses']+0.01)
+
 X_train, X_test, y_train,y_test = train_test_split(X,y, test_size = 0.2, random_state = 42, stratify = y)
+
+
 
 full_pipeline = Pipeline([
     ('scaler', StandardScaler()),
-    ('classifier', XGBoost(random_state = 42))
+    ('classifier', XGBClassifier(random_state = 42))
 ])
 
 param_grid = {
-    'classifier__n_estimators': [100, 200],
-    'classifier__max_depth': [None, 10, 20],
-    'classifier__min_samples_split': [2, 5],
-    'classifier__min_samples_leaf': [1, 2],
-    'classifier__class_weight': [None, 'balanced']
+    'classifier__n_estimators': [100,200],
+    'classifier__max_depth': [3,5,10,20],
+    'classifier__learning_rate': [0.01, 0.05, 0.1, 0.2],
+    'classifier__subsample': [0.6, 0.8, 1.0],
+    'classifier__colsample_bytree': [0.6, 0.8, 1.0],
+    'classifier__scale_pos_weight': [3.05]
 }
 
 grid_search = GridSearchCV(
     full_pipeline,
     param_grid,
-    cv = 5,
-    n_jobs = -1,
-    verbose = 1,
-    scoring = 'f1',
-    refit = 'f1'
-    )
+    cv=5,
+    n_jobs=-1,
+    verbose=1,
+    scoring='f1',
+    refit='f1'
+)
 
 grid_search.fit(X_train, y_train)
 
 grid_search.best_params_
 
-cv_res = pd.DataFrame(grid_search.cv_results_)
+'''cv_res = pd.DataFrame(grid_search.cv_results_)
 cv_res = cv_res.sort_values(by='rank_test_score', ascending=True)
-print(cv_res[['params','mean_test_score','std_test_score','rank_test_score']])
+print(cv_res[['params', 'mean_test_score', 'std_test_score', 'rank_test_score']])'''
+
+best_model = grid_search.best_estimator_
+
+y_pred = best_model.predict(X_test)
+
+print('Classification Report: \n', classification_report(y_test, y_pred))
+print('Confusion Matrix: \n', confusion_matrix(y_test, y_pred))
+
