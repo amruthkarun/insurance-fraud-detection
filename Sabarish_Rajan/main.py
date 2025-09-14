@@ -10,7 +10,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import OneHotEncoder
-#importing the dataset
+#Importing the dataset
 
 df = pd.read_excel('C:/Users/aksme/Desktop/Insuarance_Fraud/insurance-fraud-detection/Sabarish_Rajan/Fraud_detection.xlsx')
 
