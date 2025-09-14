@@ -155,6 +155,6 @@ end_time = time.time()
 
 print('Time taken for model training and prediction: ', round(end_time - start_time,2), 'seconds')
 
-#THe F1 score is 0.61 which is good considering the data is highly imbalanced. But using feature importance\
-#did not improve the score, hence we are not using it.
+#The F1 score is 0.61 which is good considering the data is highly imbalanced. 
+# But using feature importance did not improve the score, hence we are not using it.
 
