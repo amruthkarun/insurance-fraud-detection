@@ -66,7 +66,7 @@ def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 @app.post("/predict")
-def predict_fraud(request: Request, data: InputData):
+async def predict_fraud(request: Request, data: InputData):
     if not model or not ohe:
         return {"Error": "Model or Encoder not loaded."}
     
