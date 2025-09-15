@@ -1,4 +1,5 @@
-#import tensorflow as tf
+import tensorflow as tf
+import joblib
 import time as time
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -16,9 +17,15 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import RandomizedSearchCV
 from scipy.stats import randint, uniform
-#Importing the dataset
+from sqlalchemy import create_engine
+import psycopg2
 
-df = pd.read_excel('C:/Users/aksme/Desktop/Insuarance_Fraud/insurance-fraud-detection/Sabarish_Rajan/Fraud_detection.xlsx')
+#connecting to PostgreSQL database
+DB_URL = 'postgresql://postgres:1905@localhost:5432/Insuarance_fraud'
+engine = create_engine(DB_URL)
+query = "SELECT * FROM claims"
+df = pd.read_sql(query, engine)
+
 
 df = df.drop_duplicates()
 df = df.replace('?', np.nan)
@@ -51,6 +58,8 @@ plt.pyplot.show()
 cat_cols = df.select_dtypes(include=['object']).columns
 ohe = OneHotEncoder(sparse_output=False, drop='first')
 encoded_cols = pd.DataFrame(ohe.fit_transform(df[cat_cols]), columns = ohe.get_feature_names_out(cat_cols))
+
+joblib.dump(ohe, 'OneHotEncoder.pkl')
 
 df = pd.concat([df, encoded_cols],axis=1)
 df = df.drop(cat_cols, axis=1)
@@ -145,6 +154,8 @@ cv_res = cv_res.sort_values(by='rank_test_score', ascending=True)
 print(cv_res[['params', 'mean_test_score', 'std_test_score', 'rank_test_score']])'''
 
 best_model = grid_search.best_estimator_
+
+joblib.dump(best_model, 'ML_Model.pkl')
 
 y_pred = best_model.predict(X_test)
 
