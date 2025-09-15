@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from datetime import datetime
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory ="static"), name = 'static')
@@ -20,44 +21,44 @@ except FileNotFoundError:
     ohe = None
 
 class InputData(BaseModel):
-   'months_as_customer': int64,
-    'age': int64, 
-    'policy_number': int64, 
-    'policy_bind_date': datetime64[ns], 
-    'policy_state': object, 
-    'policy_csl': object, 
-    'policy_deductable': int64, 
-    'policy_annual_premium': float64, 
-    'umbrella_limit': int64, 
-    'insured_zip': int64, 
-    'insured_sex': object, 
-    'insured_education_level': object, 
-    'insured_occupation': object, 
-    'insured_hobbies': object, 
-    'insured_relationship': object, 
-    'capital-gains': int64, 
-    'capital-loss': int64, 
-    'incident_date': datetime64[ns], 
-    'incident_type': object, 
-    'collision_type': object, 
-    'incident_severity': object, 
-    'authorities_contacted': object, 
-    'incident_state': object, 
-    'incident_city': object, 
-    'incident_location': object, 
-    'incident_hour_of_the_day': int64,
-    'number_of_vehicles_involved': int64, 
-    'property_damage': object, 
-    'bodily_injuries': int64, 
-    'witnesses': int64, 
-    'police_report_available': object, 
-    'total_claim_amount': int64, 
-    'injury_claim': int64, 
-    'property_claim': int64, 
-    'vehicle_claim': int64, 
-    'auto_make': object, 
-    'auto_model': object, 
-    'auto_year': int64, 
+    months_as_customer: int
+    age: int
+    policy_number: int
+    policy_bind_date: datetime
+    policy_state: object
+    policy_csl: object
+    policy_deductable: int
+    policy_annual_premium: float
+    umbrella_limit: int
+    insured_zip: int
+    insured_sex: object
+    insured_education_level: object
+    insured_occupation: object
+    insured_hobbies: object
+    insured_relationship: object
+    capital_gains: int
+    capital_loss: int
+    incident_date: datetime
+    incident_type: object
+    collision_type: object
+    incident_severity: object
+    authorities_contacted: object
+    incident_state: object
+    incident_city: object
+    incident_location: object
+    incident_hour_of_the_day: int
+    number_of_vehicles_involved: int
+    property_damage: object
+    bodily_injuries: int
+    witnesses: int
+    police_report_available: object
+    total_claim_amount: int
+    injury_claim: int
+    property_claim: int
+    vehicle_claim: int
+    auto_make: object
+    auto_model: object
+    auto_year: int
 
 
 @app.get("/")
