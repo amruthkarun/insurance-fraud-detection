@@ -128,18 +128,19 @@ full_pipeline = Pipeline([
 ])
 
 param_grid = {
-    'classifier__n_estimators': [100,200],
-    'classifier__max_depth': [3,5,10,20],
-    'classifier__learning_rate': [0.01, 0.05, 0.1, 0.2],
-    'classifier__subsample': [0.6, 0.8, 1.0],
-    'classifier__colsample_bytree': [0.6, 0.8, 1.0],
+    'classifier__n_estimators': [100, 200, 300, 500],
+    'classifier__max_depth': [3, 4, 5, 10, 15, 20],
+    'classifier__learning_rate': [0.01, 0.05, 0.1, 0.2, 0.3],
+    'classifier__subsample': [0.6, 0.7, 0.8, 1.0],
+    'classifier__colsample_bytree': [0.5, 0.7, 1.0],
     'classifier__scale_pos_weight': [3.05]
 }
 
 grid_search = GridSearchCV(
     full_pipeline,
     param_grid,
-    cv=5,
+    #n_iter=100,
+    cv=3,
     n_jobs=-1,
     verbose=1,
     scoring='f1',
@@ -167,6 +168,6 @@ end_time = time.time()
 
 print('Time taken for model training and prediction: ', round(end_time - start_time,2), 'seconds')
 
-#The F1 score is 0.61 which is good considering the data is highly imbalanced. 
+#The F1 score is 0.70 which is good considering the data is highly imbalanced. 
 # But using feature importance did not improve the score, hence we are not using it.
 
