@@ -25,39 +25,39 @@ class InputData(BaseModel):
     age: int
     policy_number: int
     policy_bind_date: datetime
-    policy_state: object
-    policy_csl: object
+    policy_state: str
+    policy_csl: str
     policy_deductable: int
     policy_annual_premium: float
     umbrella_limit: int
     insured_zip: int
-    insured_sex: object
-    insured_education_level: object
-    insured_occupation: object
-    insured_hobbies: object
-    insured_relationship: object
+    insured_sex: str
+    insured_education_level: str
+    insured_occupation: str
+    insured_hobbies: str
+    insured_relationship: str
     capital_gains: int
     capital_loss: int
     incident_date: datetime
-    incident_type: object
-    collision_type: object
-    incident_severity: object
-    authorities_contacted: object
-    incident_state: object
-    incident_city: object
-    incident_location: object
+    incident_type: str
+    collision_type: str
+    incident_severity: str
+    authorities_contacted: str
+    incident_state: str
+    incident_city: str
+    incident_location: str
     incident_hour_of_the_day: int
     number_of_vehicles_involved: int
-    property_damage: object
+    property_damage: str
     bodily_injuries: int
     witnesses: int
-    police_report_available: object
+    police_report_available: str
     total_claim_amount: int
     injury_claim: int
     property_claim: int
     vehicle_claim: int
-    auto_make: object
-    auto_model: object
+    auto_make: str
+    auto_model: str
     auto_year: int
 
 
@@ -72,47 +72,27 @@ async def predict_fraud(request: Request, data: InputData):
     
     input_df = pd.DataFrame([data.model_dump()])
 
-    input_df = input_df.drop_duplicates()
     input_df = input_df.replace('?', np.nan)
-
-    input_df['authorities_contacted'] = input_df['authorities_contacted'].replace(np.nan, 'No')
-    input_df['fraud_reported'] = input_df['fraud_reported'].replace({'Y':1, 'N':0}).astype(int)
-    input_df['collision_type'].fillna(input_df['collision_type'].mode()[0])
-    input_df['property_damage'].fillna('NO')
-    input_df['police_report_available'].fillna('NO')
+    input_df = input_df.rename(columns={'capital-gains': 'capital_gains', 'capital-loss': 'capital_loss'})
+    input_df['authorities_contacted'] = input_df['authorities_contacted'].fillna('No')
+    input_df['collision_type'] = input_df['collision_type'].fillna(input_df['collision_type'].mode()[0])
+    input_df['property_damage'] = input_df['property_damage'].fillna('NO')
+    input_df['police_report_available'] = input_df['police_report_available'].fillna('NO')
 
     input_df = input_df.drop(['age','insured_hobbies','auto_make', 'policy_number','injury_claim','property_claim','vehicle_claim', 'policy_bind_date', 'incident_date', 'incident_location', 'insured_zip', 'auto_model', 'auto_year'], axis=1)
     cat_cols = input_df.select_dtypes(include=['object']).columns
-    ohe = OneHotEncoder(sparse_output=False, drop='first')
-    encoded_cols = pd.DataFrame(ohe.fit_transform(input_df[cat_cols]), columns = ohe.get_feature_names_out(cat_cols))
-    input_df = input_df.drop(cat_cols, axis=1)
-    input_df = pd.concat([input_df, encoded_cols], axis=1)
+    num_cols = input_df.select_dtypes(include=['int64', 'float64']).columns 
+    encoded_cols = pd.DataFrame(ohe.transform(input_df[cat_cols]), columns = ohe.get_feature_names_out(cat_cols), index = input_df.index)
 
-    input_df = pd.concat([input_df, encoded_cols],axis=1)
-    input_df = input_df.drop(cat_cols, axis=1)
-
-    Q1 = input_df['policy_annual_premium'].quantile(0.25)
-    Q3 = input_df['policy_annual_premium'].quantile(0.75)
-    IQR = Q3 - Q1
-    filter = (input_df['policy_annual_premium'] >= Q1 - 1.5 * IQR) & (input_df['policy_annual_premium'] <= Q3 + 1.5 * IQR)
-    input_df = input_df.loc[filter]
+    processed_df = input_df.drop(cat_cols, axis = 1)
+    processed_df = pd.concat([processed_df, encoded_cols], axis=1)
 
     #Umbrella limit has 50% of the data as 0, hence we create a new binary column
-    input_df['umbrella_limit_'] = np.where(input_df['umbrella_limit']==0,0,1)
+    processed_df['umbrella_limit_'] = np.where(processed_df['umbrella_limit']==0,0,1)
+    processed_df['claim_to_premium_ratio'] = processed_df['total_claim_amount']/(processed_df['policy_annual_premium']+0.01)
+    processed_df['severity_of_incident']=processed_df['total_claim_amount']/(processed_df['witnesses']+0.01)
 
-    input_df = input_df.drop('umbrella_limit', axis=1)
-
-    # total_claim_amount has few outliers, we will remove them
-    Q1 = input_df['total_claim_amount'].quantile(0.25)
-    Q3 = input_df['total_claim_amount'].quantile(0.75)
-    IQR = Q3 - Q1
-    filter = (input_df['total_claim_amount']>=Q1 -1.5*IQR) & (input_df['total_claim_amount']<=Q3 + 1.5*IQR)
-    input_df = input_df.loc[filter]
-
-    input_df['claim_to_premium_ratio'] = input_df['total_claim_amount']/(input_df['policy_annual_premium']+0.01)
-    input_df['severity_of_incident']=input_df['total_claim_amount']/(input_df['witnesses']+0.01)
-
-    fraud_probability = model.predict_proba(input_df)[:,1][0]
+    fraud_probability = model.predict_proba(processed_df)[:,1][0]
 
     risk_level = "Low Risk"
     if fraud_probability > 0.7:

@@ -6,6 +6,24 @@
 <body>
     <h1>Predict Insurance Fraud</h1>
     <form id="claim-form">
+        <label for="months_as_customer">Months as Customer:</label><br>
+        <input type="number" id="months_as_customer" name="months_as_customer" required><br><br>
+
+        <label for ="age">Age:</label><br>
+        <input type="number" id="age" name="age" required><br><br>
+
+        <label for ="policy_number">Policy Number:</label><br>
+        <input type ="number" id = "policy_number" name="policy_number" required><br><br>
+
+        <label for="policy_bind_date">Policy Bind Date (DD-MM-YYYY):</label><br>
+        <input type="date" id="policy_bind_date" name="policy_bind_date" required><br><br>
+
+        <label for="policy_state">Policy State:</label><br>
+        <input type="text" id="policy_state" name="policy_state" required><br><br>
+
+        <label for ="policy_csl">Policy CSL:</label><br>
+        <input type="text" id = "policy_csl" name ="policy_csl" required><br><br>
+
         <label for="policy_deductable">Policy Deductable:</label><br>
         <input type="number" id="policy_deductable" name="policy_deductable" required><br><br>
         
@@ -15,34 +33,121 @@
         <label for="umbrella_limit">Umbrella Limit:</label><br>
         <input type="number" id="umbrella_limit" name="umbrella_limit" required><br><br>
 
-        <label for="policy_csl">Policy CSL:</label><br>
-        <input type="text" id="policy_csl" name="policy_csl" required><br><br>
+        <label for="insured_zip">Insured Zip:</label><br>
+        <input type="text" id="insured_zip" name="insured_zip" required><br><br>
+
+        <label for ="insured_sex">Insured Sex:</label><br>
+        <input type="text" id="insured_sex" name="insured_sex" required><br><br>
+
+        <label for="insured_education_level">Insured Education Level:</label><br>
+        <input type="text" id="insured_education_level" name="insured_education_level" required><br><br>
+
+        <label for="insured_occupation">Insured Occupation:</label><br>
+        <input type="text" id="insured_occupation" name="insured_occupation" required><br><br>
+
+        <label for="insured_hobbies">Insured Hobbies</label><br>
+        <input type="text" id="insured_hobbies" name="insured_hobbies" required><br><br>
+
+        <label for="insured_relationship">Insured Relationship:</label><br>
+        <input type="text" id="insured_relationship" name="insured_relationship" required><br><br>
+
+        <label for="capital_gains">Capital Gains:</label><br>   
+        <input type="number" id="capital_gains" name="capital_gains" required><br><br>
+
+        <label for="capital_loss">Capital Loss:</label><br>
+        <input type="number" id="capital_loss" name="capital_loss" required><br><br>
+
+        <label for="incident_date">Incident Date (DD-MM-YYYY):</label><br>
+        <input type="date" id="incident_date" name="incident_date" required><br><br>
+
+        <label for="incident_type">Incident Type:</label><br>
+        <input type="text" id="incident_type" name="incident_type" required><br><br>
+
+        <label for="collision_type">Collision Type:</label><br>
+        <input type="text" id="collision_type" name="collision_type" required><br><br>
+
+        <label for="incident_severity">Incident Severity:</label><br>
+        <input type="text" id="incident_severity" name="incident_severity"  required><br><br>
+
+        <label for="authorities_contacted">Authorities Contacted:</label><br>
+        <input type="text" id="authorities_contacted" name="authorities_contacted" required><br><br>
+
+        <label for="incident_state">Incident State:</label><br>
+        <input type="text" id="incident_state" name="incident_state" required><br><br>
+
+        <label for="incident_city">Incident City:</label><br>
+        <input type="text" id="incident_city" name="incident_city" required><br><br>    
+
+        <label for="incident_location">Incident Location:</label><br>
+        <input type="text" id="incident_location" name="incident_location" required><br><br>
+
+        <label for="incident_hour_of_the_day">Incident Hour of the Day:</label><br>
+        <input type="number" id="incident_hour_of_the_day" name="incident_hour_of_the_day" required><br><br>
+
+        <label for="number_of_vehicles_involved">Number of Vehicles Involved:</label><br>
+        <input type="number" id="number_of_vehicles_involved" name="number_of_vehicles_involved" required><br><br>
+
+        <label for="property_damage">Property Damage:</label><br>
+        <input type="text" id="property_damage" name="property_damage" required><br><br>
+
+        <label for="bodily_injuries">Bodily Injuries:</label><br> 
+        <input type="number" id="bodily_injuries" name="bodily_injuries" required><br><br>
+
+        <label for="witnesses">Witnesses:</label><br>
+        <input type="number" id="witnesses" name="witnesses" required><br><br>
+
+        <label for="police_report_available">Police Report Available:</label><br>
+        <input type="text" id="police_report_available" name="police_report_available" required><br><br>
+
+        <label for ="total_claim_amount">Total Claim Amount:</label><br>
+        <input type="number" id="total_claim_amount" name="total_claim_amount" required><br><br>
+
+        <label for="injury_claim">Injury Claim:</label><br>
+        <input type="number" id="injury_claim" name="injury_claim" required><br><br>
+
+        <label for="property_claim">Property Claim:</label><br>
+        <input type="number" id="property_claim" name="property_claim" required><br><br>
+
+        <label for="vehicle_claim">Vehicle Claim:</label><br>
+        <input type="number" id="vehicle_claim" name="vehicle_claim" required><br><br>
+
+        <label for="auto_make">AutoMake:</label><br>
+        <input type="text" id="auto_make" name="auto_make" required><br><br>
+
+        <label for="auto_model">Auto Model:</label><br>
+        <input type="text" id="auto_model" name="auto_model" required><br><br>
+
+        <label for="auto_year">Auto Year:</label><br>
+        <input type="number" id="auto_year" name="auto_year" required><br><br>
 
         <button type="submit">Predict Fraud</button>
     </form>
 
     <div id="result"></div>
 
-    <script>
+        <script>
         document.getElementById('claim-form').addEventListener('submit', async function(event) {
             event.preventDefault();
 
             const form = event.target;
             const formData = new FormData(form);
             const jsonData = {};
+            
             formData.forEach((value, key) => {
-                // Convert numbers to integers/floats as needed
-                if (key === 'policy_deductable' || key === 'umbrella_limit' /* ... and all other int fields */) {
-                    jsonData[key] = parseInt(value);
-                } else if (key === 'policy_annual_premium' /* ... and all other float fields */) {
+                const inputElement = form.querySelector(`[name="${key}"]`);
+                const inputType = inputElement ? inputElement.type : null;
+                
+                if (inputType === 'number') {
                     jsonData[key] = parseFloat(value);
+                } else if (inputType === 'date') {
+                    jsonData[key] = value;
                 } else {
                     jsonData[key] = value;
                 }
             });
 
             try {
-                const response = await fetch('/predict_fraud', {
+                const response = await fetch('/predict', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

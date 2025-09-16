@@ -30,6 +30,8 @@ df = pd.read_sql(query, engine)
 df = df.drop_duplicates()
 df = df.replace('?', np.nan)
 
+df = df.rename(columns={'capital-gains': 'capital_gains', 'capital-loss': 'capital_loss'})
+
 df['authorities_contacted'] = df['authorities_contacted'].replace(np.nan, 'No')
 df['fraud_reported'] = df['fraud_reported'].replace({'Y':1, 'N':0}).astype(int)
 df['collision_type'].fillna(df['collision_type'].mode()[0])
@@ -82,7 +84,6 @@ df = df.loc[filter]
 #Umbrella limit has 50% of the data as 0, hence we create a new binary column
 df['umbrella_limit_'] = np.where(df['umbrella_limit']==0,0,1)
 
-df = df.drop('umbrella_limit', axis=1)
 
 # tatal_claim_amount has few outliers, we will remove them
 Q1 = df['total_claim_amount'].quantile(0.25)
