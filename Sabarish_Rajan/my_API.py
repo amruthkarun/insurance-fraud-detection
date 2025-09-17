@@ -73,7 +73,13 @@ async def predict_fraud(request: Request, data: InputData):
     input_df = pd.DataFrame([data.model_dump()])
 
     input_df = input_df.replace('?', np.nan)
-    input_df = input_df.rename(columns={'capital-gains': 'capital_gains', 'capital-loss': 'capital_loss'})
+    
+    input_df.rename(columns={
+    'capital_gains': 'capital-gains',
+    'capital_loss': 'capital-loss'
+}, inplace=True)
+
+
     input_df['authorities_contacted'] = input_df['authorities_contacted'].fillna('No')
     input_df['collision_type'] = input_df['collision_type'].fillna(input_df['collision_type'].mode()[0])
     input_df['property_damage'] = input_df['property_damage'].fillna('NO')
@@ -87,11 +93,11 @@ async def predict_fraud(request: Request, data: InputData):
     processed_df = input_df.drop(cat_cols, axis = 1)
     processed_df = pd.concat([processed_df, encoded_cols], axis=1)
 
-    #Umbrella limit has 50% of the data as 0, hence we create a new binary column
-    processed_df['umbrella_limit_'] = np.where(processed_df['umbrella_limit']==0,0,1)
+    
     processed_df['claim_to_premium_ratio'] = processed_df['total_claim_amount']/(processed_df['policy_annual_premium']+0.01)
     processed_df['severity_of_incident']=processed_df['total_claim_amount']/(processed_df['witnesses']+0.01)
 
+    print(processed_df.columns)
     fraud_probability = model.predict_proba(processed_df)[:,1][0]
 
     risk_level = "Low Risk"
