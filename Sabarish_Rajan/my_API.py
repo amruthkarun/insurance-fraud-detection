@@ -97,9 +97,9 @@ async def predict_fraud(request: Request, data: InputData):
     processed_df['claim_to_premium_ratio'] = processed_df['total_claim_amount']/(processed_df['policy_annual_premium']+0.01)
     processed_df['severity_of_incident']=processed_df['total_claim_amount']/(processed_df['witnesses']+0.01)
 
-    print(processed_df.columns)
-    fraud_probability = model.predict_proba(processed_df)[:,1][0]
 
+    fraud_prediction = model.predict_proba(processed_df)[:,1][0]
+    fraud_probability = float(fraud_prediction)
     risk_level = "Low Risk"
     if fraud_probability > 0.7:
         risk_level = "High Risk"

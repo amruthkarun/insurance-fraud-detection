@@ -140,6 +140,7 @@ param_grid = {
     'classifier__subsample': [0.6, 0.8, 1.0],
     'classifier__colsample_bytree': [0.6, 0.8, 1.0],
     'classifier__min_child_weight': [1, 3, 5],
+    'classifier__gamma': [0, 0.1, 0.2],
     'classifier__scale_pos_weight': [imbalance_ratio]
 }
 
@@ -186,4 +187,3 @@ print('Time taken for model training and prediction: ', round(end_time - start_t
 
 #The F1 score is 0.70 which is good considering the data is highly imbalanced. 
 # But using feature importance did not improve the score, hence we are not using it.
-
