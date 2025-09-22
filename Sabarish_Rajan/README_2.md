@@ -78,4 +78,6 @@ Integrate PostgreSQL for storing claim data and risk assessments, utilizing thre
 #### Model
 
 - Made a new model based on Neural Networks. Made a very simple model with 5 layers(4 hidden 1 output).
-- The first model had a F1 score of 0.47 so used 
+- The first model had a F1 score of 0.47 so used better optimizers and initializers.
+- The max F1 score after multilple changes was the same as XGBoost, 0.70, with an accuracy of 83%.
+- Currently using keras-tuner to find the best hyperparameters for the model. Will be working on that end next as well.
