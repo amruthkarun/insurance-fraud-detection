@@ -73,4 +73,9 @@ Integrate PostgreSQL for storing claim data and risk assessments, utilizing thre
 - Finally was able to solve the data validation issue and got the predictions to be displayed on the framework.
 - Used style block in the head of index.html to beautify the API a little.
 
+### Date - 22nd September 2025
 
+#### Model
+
+- Made a new model based on Neural Networks. Made a very simple model with 5 layers(4 hidden 1 output).
+- The first model had a F1 score of 0.47 so used 

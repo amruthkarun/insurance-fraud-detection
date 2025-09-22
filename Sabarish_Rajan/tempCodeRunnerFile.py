@@ -1,7 +1,9 @@
-base_estimators = [
-    ('rf', RandomForestClassifier(n_estimators=100,
-    max_depth = 5,
-    min_samples_split=5,
-    random_state=42)),
-    ('lr', LogisticRegression(max_iter=1000, random_state=42))
-]
+y_prob = best_model.predict_proba(X_test)
+
+thresholds = np.arange(0.1, 0.9, 0.05)
+
+f1_scores = [f1_score(y_test, (y_prob[:,1]>t).astype(int)) for t in thresholds]
+
+best_threshold = thresholds[np.argmax(f1_scores)]
+
+y_pred = (y_prob[:,1] >= best_threshold).astype(int)
