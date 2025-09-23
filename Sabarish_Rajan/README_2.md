@@ -81,3 +81,12 @@ Integrate PostgreSQL for storing claim data and risk assessments, utilizing thre
 - The first model had a F1 score of 0.47 so used better optimizers and initializers.
 - The max F1 score after multilple changes was the same as XGBoost, 0.70, with an accuracy of 83%.
 - Currently using keras-tuner to find the best hyperparameters for the model. Will be working on that end next as well.
+
+### Date - 23rd September 2025
+
+#### Model 
+
+- The Neural Nets model is not promising, with a maximum F1 score of 0.55. So dropping that model.
+- Thinking of integrating other datasets so that I can get an external perspective on the model. Maybe that will help in improving the efficiency of the model.
+- Will be working now on integrating GenAI concepts into the model. 
+- Added a few features to the data set related to claim amounts. Did not increase the F1 score.

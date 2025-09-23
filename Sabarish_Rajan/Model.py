@@ -44,6 +44,9 @@ df_corr = df[df.dtypes[(df.dtypes == 'float64') | (df.dtypes == 'int64')].index]
 sns.heatmap(df_corr, annot=True)
 plt.pyplot.show()'''
 
+df['injury_claim_ratio']=df['injury_claim']/df['total_claim_amount']
+df['property_claim_ratio']=df['property_claim']/df['total_claim_amount']
+df['vehicle_claim_ratio']=df['vehicle_claim']/df['total_claim_amount']
 
 #based on the correlation data we drop the following columns
 df = df.drop(['age','insured_hobbies','auto_make', 'policy_number','injury_claim','property_claim','vehicle_claim', 'policy_bind_date', 'incident_date', 'incident_location', 'insured_zip', 'auto_model', 'auto_year'], axis=1)

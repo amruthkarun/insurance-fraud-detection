@@ -20,7 +20,7 @@ from tensorflow.keras import Sequential
 from tensorflow.keras.losses import BinaryCrossentropy
 from tensorflow.keras.optimizers import Adam, RMSprop, SGD
 from tensorflow.keras.metrics import F1Score
-from tensorflow.keras.regularizers import l1, l2
+from tensorflow.keras import regularizers
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras import backend as K
 
@@ -171,35 +171,28 @@ class_weights = {0: weight_for_0, 1: weight_for_1}
 
 #Code not complete yet🥲
 
-#custom F1_score
-
-def f1_score_metric(y_true, y_pred):
-    def recall(y_true, y_pred):
-        true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-        possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
-        recall = true_positives / (possible_positives + K.epsilon())
-        return recall
-
-    def precision(y_true, y_pred):
-        true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-        predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
-        precision = true_positives / (predicted_positives + K.epsilon())
-        return precision
-
-    precision = precision(y_true, y_pred)
-    recall = recall(y_true, y_pred)
-    return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
-
-    
 #Building a Neural Network Model
 def build_model(hp):
     model = Sequential()
     model.add(tf.keras.Input(shape=X_res_scaled.shape[1:]))
 
-    for i in range(hp.Int('num_hidden_layers', min_value = 1, max_value = 3)):
-        model.add(Dense(units = hp.Int('units_'+str(i), min_value = 2, max_value = 128, step = 32),
+    hp_regularizer_choice = hp.Choice('regularizer_type', values = ['l1', 'l2', 'l1_l2', 'none'])
+    hp_regularizer_rate = hp.Float('regularizer_rate', min_value = 1e-5, max_value = 1e-2, sampling = 'log')
+
+    if hp_regularizer_choice == 'l1':
+        regularizer = regularizers.L1(hp_regularizer_rate)
+    elif hp_regularizer_choice == 'l2':
+        regularizer = regularizers.L2(hp_regularizer_rate)
+    elif hp_regularizer_choice == 'l1_l2':
+        regularizer = regularizers.L1L2(l1 = hp_regularizer_rate, l2 = hp_regularizer_rate)
+    else:
+        regularizer = None
+
+    for i in range(hp.Int('num_hidden_layers', min_value = 1, max_value = 5 )):
+        model.add(Dense(units = hp.Int('units_'+str(i), min_value = 64, max_value = 512, step = 32),
             activation = 'relu',
-            kernel_initializer = 'he_normal'))
+            kernel_initializer = 'he_normal',
+            kernel_regularizer=regularizer))
         model.add(Dropout(rate=hp.Float('dropuout_'+str(i), min_value = 0.2, max_value = 0.5, step = 0.1)))
 
 
@@ -208,8 +201,8 @@ def build_model(hp):
     learning_rate = hp.Choice('learning_rate_', values = [1e-2, 1e-3, 1e-4, 1e-5])
 
     model.compile(loss = 'BinaryCrossentropy',
-        optimizer = Adam(learning_rate = learning_rate),
-        metrics = ['accuracy', f1_score_metric]
+        optimizer = RMSprop(learning_rate = learning_rate),
+        metrics = [F1Score(average = 'weighted', name = 'f1_score')]
     )
 
 
@@ -217,15 +210,15 @@ def build_model(hp):
 
 tuner = RandomSearch(
     build_model,
-    objective = 'val_f1_score_metric',
-    max_trials = 20,
+    objective = 'val_f1_score',
+    max_trials = 30,
     executions_per_trial = 1,
     project_name = 'fraud_det'
 )
 
 
 
-tuner.search(X_res_scaled, y_train,epochs = 50, validation_data=(X_valid_scaled, y_valid), class_weight = class_weights)
+tuner.search(X_res_scaled, y_train,epochs = 100, validation_data=(X_valid_scaled, y_valid), class_weight = class_weights)
 
 best_hp = tuner.get_best_hyperparameters(num_trials=1)[0]
 
