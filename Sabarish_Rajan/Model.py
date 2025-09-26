@@ -53,10 +53,10 @@ df = df.drop(['age','insured_hobbies','auto_make', 'policy_number','injury_claim
 
 df_corr = df[df.dtypes[(df.dtypes == 'float64') | (df.dtypes == 'int64')].index].corr()
 
-'''plt.pyplot.figure(figsize=(12,10))
+'''plt.figure(figsize=(12,10))
 sns.heatmap(df_corr, annot=True)
-plt.pyplot.show()
-'''
+plt.show()'''
+
 #print(df.info())
 
 #Encoding categorical data

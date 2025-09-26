@@ -6,10 +6,16 @@ import pandas as pd
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from datetime import datetime
+import os
+import shap
+from google import genai
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory ="static"), name = 'static')
 templates = Jinja2Templates(directory="templates")
+GEMINI_API_KEY = "AIzaSyBaMXC9Xshl0yyp6bSj3YP_VRcFTMbSOk4"
+gemini_client = genai.Client(api_key = GEMINI_API_KEY)
+
 
 try:
     model = joblib.load('ML_Model.pkl')
@@ -19,6 +25,13 @@ except FileNotFoundError:
     print("Model and/or Encoder not found.")
     model = None
     ohe = None
+
+try:
+    explainer = shap.TreeExplainer(model.named_steps['classifier'])
+    print('SHAP Explainer Initialized')
+except Exception as e:
+    print("Error initializing explainer:{e}")
+    explainer = None
 
 class InputData(BaseModel):
     months_as_customer: int
@@ -60,6 +73,33 @@ class InputData(BaseModel):
     auto_model: str
     auto_year: int
 
+def generate_narrative(risk_level:str, probability:float, top_drivers:pd.Series, raw_data:dict):
+
+    if not gemini_client:
+        return "GenAI services not available"
+    
+    prompt = ["You are Fraud ANalyst AI. Generate a concise, professional justification for flagging this insurance claim."
+    "The predictor model returned a {risk_level} status with a probability of {probability:.1%} of fraud."
+    "Analyze the most influential factors and their actual values to explain why the model flagged the claim."
+    "The influential factors are:"]
+
+    for features, shap_values in top_drivers.item():
+        feature_values = raw_data.get(feature, 'N/A')
+        influence = "pushed the score towards fraud" if shap_value>0 else "pulled the score away from fraud"
+        prompt.append(f"-Features:{feature}(Actual Value:{feature_values}). Its influence {influence}")
+
+    final_prompt = " ".join(prompt)+ " Focus on professional analysis of these factors and conclude with recomendations for actions."
+
+    try:
+        response = gemini_client.generate_content(
+            model= "gemini-2.5-flash",
+            contents = final_prompt
+        )
+        return response.text
+    except APIError as e:
+        return "API Error: Could not generate narrative."
+    except Exception as e:
+        return "Unexpected error encountered. Cannot generate narrative."
 
 @app.get("/")
 def read_root(request: Request):
@@ -101,7 +141,7 @@ async def predict_fraud(request: Request, data: InputData):
     processed_df['claim_to_premium_ratio'] = processed_df['total_claim_amount']/(processed_df['policy_annual_premium']+0.01)
     processed_df['severity_of_incident']=processed_df['total_claim_amount']/(processed_df['witnesses']+0.01)
 
-
+    print(processed_df.columns)
     fraud_prediction = model.predict_proba(processed_df)[:,1][0]
     fraud_probability = float(fraud_prediction)
     risk_level = "Low Risk"
@@ -110,8 +150,30 @@ async def predict_fraud(request: Request, data: InputData):
     elif fraud_probability > 0.4:
         risk_level = "Medium Risk"
 
+    narrative = "Narrative Skipped or not generated"
+
+    if explainer and risk_level in ['Medium Risk', 'High Risk']:
+
+        shap_values = explainer.shap_values(processed_df)[1][0]
+        cat_cols = processed_df.select_dtypes(include=['object']).columns
+        num_cols = processed_df.select_dtypes(include=['int64', 'float64']).columns
+
+        feature_names = cat_cols + num_cols
+
+        shap_series= pd.Series(shape_values, index = feature_names)
+
+        top_drivers_abs = shap_series.abs().sort_values(ascending=False).head(5)
+        top_drivers_with_sign = shap_series.loc[top_drivers_abs.index]
+
+        genai_narrative = generate_narrative(
+            risk_level, fraud_probability, top_drivers_with_sign, data.model_dump()
+        )
+
     return {
         "fraud_probability": fraud_probability,
-        "risk_level": risk_level
+        "risk_level": risk_level,
+        "Narrative" : genai_narrative
     }
+
+
 
