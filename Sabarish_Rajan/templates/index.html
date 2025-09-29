@@ -75,121 +75,347 @@
 <body>
     <h1>Predict Insurance Fraud</h1>
     <form id="claim-form">
-        <label for="months_as_customer">Months as Customer:</label><br>
-        <input type="number" id="months_as_customer" name="months_as_customer" required><br><br>
+        <div class="form-grid">
+            <div>
+                <label for="months_as_customer">Months as Customer:</label><br>
+                <input type="number" id="months_as_customer" name="months_as_customer" required><br><br>
+            </div>
+            
+            <div>
+                <label for ="age">Age:</label><br>
+                <input type="number" id="age" name="age" required><br><br>
+            </div>
+            
+            <div>
+                <label for ="policy_number">Policy Number:</label><br>
+                <input type ="number" id = "policy_number" name="policy_number" required><br><br>
+            </div>
+            
+            <div>
+                <label for="policy_bind_date">Policy Bind Date (DD-MM-YYYY):</label><br>
+                <input type="date" id="policy_bind_date" name="policy_bind_date" required><br><br>
+            </div>
+            
+            <div>
+                <label for="policy_state">Policy State:</label><br>
+                <select id="policy_state" name="policy_state" required>
+                    <option value="" disabled selected>Select State</option>
+                    <option value="OH">Ohio (OH)</option>
+                    <option value="IN">Indiana (IN)</option>
+                    <option value="IL">Illinois (IL)</option>
+                </select><br><br>
+            </div>
+            
 
-        <label for ="age">Age:</label><br>
-        <input type="number" id="age" name="age" required><br><br>
+            <div>
+                <label for ="policy_csl">Policy CSL:</label><br>
+                <select id="policy_csl" name="policy_csl" required>
+                    <option value="" disabled selected>Select Policy CSL</option>
+                    <option value="100/300">100/300</option>
+                    <option value="250/500">250/500</option>
+                    <option value="500/1000">500/1000</option>
+                </select><br><br>
+            </div>
 
-        <label for ="policy_number">Policy Number:</label><br>
-        <input type ="number" id = "policy_number" name="policy_number" required><br><br>
-
-        <label for="policy_bind_date">Policy Bind Date (DD-MM-YYYY):</label><br>
-        <input type="date" id="policy_bind_date" name="policy_bind_date" required><br><br>
-
-        <label for="policy_state">Policy State:</label><br>
-        <input type="text" id="policy_state" name="policy_state" required><br><br>
-
-        <label for ="policy_csl">Policy CSL:</label><br>
-        <input type="text" id = "policy_csl" name ="policy_csl" required><br><br>
-
-        <label for="policy_deductable">Policy Deductable:</label><br>
-        <input type="number" id="policy_deductable" name="policy_deductable" required><br><br>
+            <div>
+                <label for="policy_deductable">Policy Deductable:</label><br>
+                <input type="number" id="policy_deductable" name="policy_deductable" required><br><br>
+            </div>
         
-        <label for="policy_annual_premium">Annual Premium:</label><br>
-        <input type="number" step="0.01" id="policy_annual_premium" name="policy_annual_premium" required><br><br>
+            <div>
+                <label for="policy_annual_premium">Annual Premium:</label><br>
+                <input type="number" step="0.01" id="policy_annual_premium" name="policy_annual_premium" required><br><br>
+            </div>
 
-        <label for="umbrella_limit">Umbrella Limit:</label><br>
-        <input type="number" id="umbrella_limit" name="umbrella_limit" required><br><br>
+            <div>
+                <label for="umbrella_limit">Umbrella Limit:</label><br>
+                <input type="number" id="umbrella_limit" name="umbrella_limit" required><br><br>
+            </div>
 
-        <label for="insured_zip">Insured Zip:</label><br>
-        <input type="text" id="insured_zip" name="insured_zip" required><br><br>
+            <div>
+                <label for="insured_zip">Insured Zip:</label><br>
+                <input type="number" id="insured_zip" name="insured_zip" required><br><br>
+            </div>
 
-        <label for ="insured_sex">Insured Sex:</label><br>
-        <input type="text" id="insured_sex" name="insured_sex" required><br><br>
+            <div>
+                <label for ="insured_sex">Insured Sex:</label><br>
+                <select id = "insured_sex" name = "insured_sex" required>
+                    <option value="" disabled selected>Select Sex</option>
+                    <option value="MALE">MALE</option>
+                    <option value="FEMALE">FEMALE</option>
+                </select><br><br>
+            </div>
 
-        <label for="insured_education_level">Insured Education Level:</label><br>
-        <input type="text" id="insured_education_level" name="insured_education_level" required><br><br>
+            <div>
+                <label for="insured_education_level">Insured Education Level:</label><br>
+                <select id="insured_education_level" name="insured_education_level" required>
+                    <option value="" disabled selected>Select Education Level</option>
+                    <option value="Associate">Associate</option>
+                    <option value="College">College</option>
+                    <option value="High School">High School</option>
+                    <option value="JD">JD</option>
+                    <option value="Masters">Masters</option>
+                    <option value="MD">MD</option>
+                    <option value ="PhD">PhD</option>
+                </select><br><br>
+            </div>
 
-        <label for="insured_occupation">Insured Occupation:</label><br>
-        <input type="text" id="insured_occupation" name="insured_occupation" required><br><br>
+            <div>  
+                <label for="insured_occupation">Insured Occupation:</label><br>
+                <select id="insured_occupation" name = "insured_occupation" required>
+                    <option value="" disabled selected>Select Occupation</option>
+                    <option value="adm-clerical">adm-clerical</option>
+                    <option value="armed-forces">armed-forces</option>
+                    <option value="craft-repair">craft-repair</option>
+                    <option value="exec-managerial">exec-managerial</option>
+                    <option value="farming-fishing">farming-fishing</option>
+                    <option value="handlers-cleaners">handlers-cleaners</option>
+                    <option value="machine-op-inspct">machine-op-inspct</option>
+                    <option value="other-service">other-service</option>
+                    <option value="priv-house-serv">priv-house-serv</option>
+                    <option value="prof-speciality">prof-speciality</option>
+                    <option value="protective-serv">protective-serv</option>
+                    <option value="sales">sales</option>
+                    <option value="tech-support">tech-support</option>
+                    <option value="transport-moving">transport-moving</option>
 
-        <label for="insured_hobbies">Insured Hobbies</label><br>
-        <input type="text" id="insured_hobbies" name="insured_hobbies" required><br><br>
+                </select><br><br>
+            </div>
 
-        <label for="insured_relationship">Insured Relationship:</label><br>
-        <input type="text" id="insured_relationship" name="insured_relationship" required><br><br>
 
-        <label for="capital_gains">Capital Gains:</label><br>   
-        <input type="number" id="capital_gains" name="capital_gains" required><br><br>
+            <div>
+                <label for="insured_hobbies">Insured Hobbies</label><br>
+                <select id="insured_hobbies" name = "insured_hobbies" required>
+                    <option value="" disabled selected>Select Hobbies</option>
+                    <option value="base-jumping">base-jumping</option>
+                    <option value="basketball">basketball</option>
+                    <option value="board-games">board-games</option>
+                    <option value="bungie-jumping">bungie-jumping</option>
+                    <option value="camping">camping</option>
+                    <option value="chess">chess</option>
+                    <option value="cross-fit">cross-fit</option>
+                    <option value="dancing">dancing</option>
+                    <option value="exercise">exercise</option>
+                    <option value="golf">golf</option>
+                    <option value="hiking">hiking</option>
+                    <option value="kayaking">kayaking</option>
+                    <option value="movies">movies</option>
+                    <option value="paint-ball">paint-ball</option>
+                    <option value="polo">polo</option>
+                    <option value="reading">reading</option>
+                    <option value="sky-diving">sky-diving</option>
+                    <option value="sleeping">sleeping</option>
+                    <option value="video-games">video-games</option>
+                    <option value="yachting">yachting</option>
+                </select><br><br>
+            </div>
 
-        <label for="capital_loss">Capital Loss:</label><br>
-        <input type="number" id="capital_loss" name="capital_loss" required><br><br>
+        
+            <div>
+                <label for="insured_relationship">Insured Relationship:</label><br>
+                <select id="insured_relationship" name = "insured_relationship" required>
+                    <option value="" disabled selected>Select Relationship</option>
+                    <option value="husband">husband</option>
+                    <option value="not-in-family">not-in-family</option>
+                    <option value="other-relative">other-relative</option>
+                    <option value="own-child">own-child</option>
+                    <option value="unmarried">unmarried</option>
+                    <option value="wife">wife</option>
+                </select><br><br>
+            </div>
 
-        <label for="incident_date">Incident Date (DD-MM-YYYY):</label><br>
-        <input type="date" id="incident_date" name="incident_date" required><br><br>
 
-        <label for="incident_type">Incident Type:</label><br>
-        <input type="text" id="incident_type" name="incident_type" required><br><br>
+            <div>
+                <label for="capital_gains">Capital Gains:</label><br>   
+                <input type="number" id="capital_gains" name="capital_gains" required><br><br>
+            </div>
 
-        <label for="collision_type">Collision Type:</label><br>
-        <input type="text" id="collision_type" name="collision_type" required><br><br>
+            <div>
+                <label for="capital_loss">Capital Loss:</label><br>
+                <input type="number" id="capital_loss" name="capital_loss" required><br><br>
+            </div>
 
-        <label for="incident_severity">Incident Severity:</label><br>
-        <input type="text" id="incident_severity" name="incident_severity"  required><br><br>
+            <div>
+                <label for="incident_date">Incident Date (DD-MM-YYYY):</label><br>
+                <input type="date" id="incident_date" name="incident_date" required><br><br>
+            </div>
 
-        <label for="authorities_contacted">Authorities Contacted:</label><br>
-        <input type="text" id="authorities_contacted" name="authorities_contacted" required><br><br>
+            <div><label for="incident_type">Incident Type:</label><br>
+            <select id="incident_type" name = "incident_type" required>
+                <option value="" disabled selected>Select Incident Type</option>
+                <option value="Multi-vehicle-collision">Multi-vehicle Collision</option>
+                <option value="Parked Car">Parked Car</option>
+                <option value="Single Vehicle Collision">Single Vehicle Collision</option>
+                <option value="Vehicle Theft">Vehicle Theft</option>
+            </select><br><br></div>
 
-        <label for="incident_state">Incident State:</label><br>
-        <input type="text" id="incident_state" name="incident_state" required><br><br>
 
-        <label for="incident_city">Incident City:</label><br>
-        <input type="text" id="incident_city" name="incident_city" required><br><br>    
+            <div><label for="collision_type">Collision Type:</label><br>
+            <select id="collision_type" name="collision_type" required>
+                <option value="" disabled selected>Select Collision Type</option>
+                <option value="Side Collision">Side Collision</option>
+                <option value="Front Collision">Front Collision</option>
+                <option value="Rear Collision">Rear Collision</option>
+                <option value="?">N/A</option>
+            </select><br><br></div>
 
-        <label for="incident_location">Incident Location:</label><br>
-        <input type="text" id="incident_location" name="incident_location" required><br><br>
 
-        <label for="incident_hour_of_the_day">Incident Hour of the Day:</label><br>
-        <input type="number" id="incident_hour_of_the_day" name="incident_hour_of_the_day" required><br><br>
+            <div><label for="incident_severity">Incident Severity:</label><br>
+            <select id="incident_severity" name="incident_severity" required>
+                <option value="" disabled selected>Select Incident Severity</option>
+                <option value="Major Damage">Major Damage</option>
+                <option value="Minor Damage">Minor Damage</option>
+                <option value="Total Loss">Total Loss</option>
+                <option value="Trivial Damage">Trivial Damage</option>
+            </select><br><br></div>
 
-        <label for="number_of_vehicles_involved">Number of Vehicles Involved:</label><br>
-        <input type="number" id="number_of_vehicles_involved" name="number_of_vehicles_involved" required><br><br>
 
-        <label for="property_damage">Property Damage:</label><br>
-        <input type="text" id="property_damage" name="property_damage" required><br><br>
+            <div><label for="authorities_contacted">Authorities Contacted:</label><br>
+            <select id="authorities_contacted" name="authorities_contacted" required>
+                <option value="" disabled selected>Select Authorities Contacted</option>
+                <option value="Ambulance">Ambulance</option>
+                <option value="Fire">Fire</option>
+                <option value="None">None</option>
+                <option value="Police">Police</option>
+                <option value="Other">Other</option>
+            </select><br><br></div>
 
-        <label for="bodily_injuries">Bodily Injuries:</label><br> 
-        <input type="number" id="bodily_injuries" name="bodily_injuries" required><br><br>
 
-        <label for="witnesses">Witnesses:</label><br>
-        <input type="number" id="witnesses" name="witnesses" required><br><br>
+            <div><label for="incident_state">Incident State:</label><br>
+            <select id="incident_state" name="incident_state" required>
+                <option value="" disabled selected>Select Incident State</option>
+                <option value="NC">North Carolina(NC)</option>
+                <option value="NY">New York(NY)</option>
+                <option value="OH">Ohio(OH)</option>
+                <option value="PA">Pasadena(PA)</option>
+                <option value="SC">South Carolina(SC)</option>
+                <option value="VA">Virginia(VA)</option>
+                <option value="WV">West Virginia(WV)</option>
+            </select><br><br></div>
 
-        <label for="police_report_available">Police Report Available:</label><br>
-        <input type="text" id="police_report_available" name="police_report_available" required><br><br>
 
-        <label for ="total_claim_amount">Total Claim Amount:</label><br>
-        <input type="number" id="total_claim_amount" name="total_claim_amount" required><br><br>
+            <div>
+                <label for="incident_city">Incident City:</label><br>
+                <select id="incident_city" name="incident_city" required>
+                    <option value="" disabled selected>Select Incident City</option>
+                    <option value="Arlington">Arlington</option>
+                    <option value="Columbus">Columbus</option>
+                    <option value="Hillsdale">Hillsdale</option>
+                    <option value="Northbend">Northbend</option>
+                    <option value="Northbrook">Northbrook</option>
+                    <option value="Riverwood">Riverwood</option>
+                    <option value="Springfield">Springfield</option>
+                </select><br><br>
+            </div>
 
-        <label for="injury_claim">Injury Claim:</label><br>
-        <input type="number" id="injury_claim" name="injury_claim" required><br><br>
 
-        <label for="property_claim">Property Claim:</label><br>
-        <input type="number" id="property_claim" name="property_claim" required><br><br>
+            <div>
+                <label for="incident_location">Incident Location:</label><br>
+                <input type="text" id="incident_location" name="incident_location" required><br><br>
+            </div>
 
-        <label for="vehicle_claim">Vehicle Claim:</label><br>
-        <input type="number" id="vehicle_claim" name="vehicle_claim" required><br><br>
 
-        <label for="auto_make">AutoMake:</label><br>
-        <input type="text" id="auto_make" name="auto_make" required><br><br>
+            <div>
+                <label for="incident_hour_of_the_day">Incident Hour of the Day:</label><br>
+                <input type="number" id="incident_hour_of_the_day" name="incident_hour_of_the_day" required><br><br>
+            </div>
 
-        <label for="auto_model">Auto Model:</label><br>
-        <input type="text" id="auto_model" name="auto_model" required><br><br>
+            <div>
+                <label for="number_of_vehicles_involved">Number of Vehicles Involved:</label><br>
+                <input type="number" id="number_of_vehicles_involved" name="number_of_vehicles_involved" required><br><br>
+            </div>
 
-        <label for="auto_year">Auto Year:</label><br>
-        <input type="number" id="auto_year" name="auto_year" required><br><br>
+            <div>
+                <label for="property_damage">Property Damage:</label><br>
+                <select id="property_damage" name="property_damage" required>
+                    <option value="" disabled selected>Select Property Damage</option>
+                    <option value="YES">YES</option>        
+                    <option value="NO">NO</option>
+                    <option value="?">N/A</option>
+                </select><br><br>
+            </div>
 
-        <button type="submit">Predict Fraud</button>
+            <div>
+                <label for="bodily_injuries">Bodily Injuries:</label><br> 
+                <input type="number" id="bodily_injuries" name="bodily_injuries" required><br><br>
+            </div>
+
+
+            <div>
+                <label for="witnesses">Witnesses:</label><br>
+                <input type="number" id="witnesses" name="witnesses" required><br><br>
+            </div>
+
+            <div>
+                <label for="police_report_available">Police Report Available:</label><br>
+                <select id="police_report_available" name="police_report_available" required>
+                    <option value="" disabled selected>Select Police Report Avaliable</option>
+                    <option value="YES">YES</option>
+                    <option value="NO">NO</option>
+                    <option value="?">N/A</option>
+                </select><br><br>
+            </div>
+
+
+            <div>
+                <label for ="total_claim_amount">Total Claim Amount:</label><br>
+                <input type="number" id="total_claim_amount" name="total_claim_amount" required><br><br>
+            </div>
+
+
+            <div>
+                <label for="injury_claim">Injury Claim:</label><br>
+                <input type="number" id="injury_claim" name="injury_claim" required><br><br>
+            </div>
+
+
+            <div>
+                <label for="property_claim">Property Claim:</label><br>
+                <input type="number" id="property_claim" name="property_claim" required><br><br>
+            </div>
+
+            <div>
+                <label for="vehicle_claim">Vehicle Claim:</label><br>
+                <input type="number" id="vehicle_claim" name="vehicle_claim" required><br><br>
+            </div>
+
+
+            <div>
+                <label for="auto_make">AutoMake:</label><br>
+                <select id="auto_make" name="auto_make" required>
+                    <option value="" disabled selected>Select Auto make</option>
+                    <option value="Accura">Accura</option>
+                    <option value="Audi">Audi</option>
+                    <option value="BMW">BMW</option>
+                    <option value="Chevrolet">Chevrolet</option>
+                    <option value="Dodge">Dodge</option>
+                    <option value="Ford">Ford</option>
+                    <option value="Honda">Honda</option>
+                    <option value="Jeep">Jeep</option>
+                    <option value="Mercedes">Mercedes</option>
+                    <option value="Nissan">Nissan</option>
+                    <option value="Saab">Saab</option>
+                    <option value="Suburu">Suburu</option>
+                    <option value="Toyota">Toyota</option>
+                    <option value="Volkswagon">Volkswagon</option>
+                </select><br><br>
+            </div>
+
+            <div>
+                <label for="auto_model">Auto Model:</label><br>
+                <input type="text" id="auto_model" name="auto_model" required><br><br>
+            </div>
+
+            <div>
+                <label for="auto_year">Auto Year:</label><br>
+                <input type="number" id="auto_year" name="auto_year" required><br><br>
+            </div>
+
+            <div>
+                <button type="submit">Predict Fraud</button>
+            </div>
+        </div>
+        
     </form>
 
     <div id="result"></div>
@@ -232,6 +458,9 @@
                         <h3>Prediction Result:</h3>
                         <p>Fraud Probability: ${Math.round(result.fraud_probability * 100)}%</p>
                         <p>Risk Level: <strong>${result.risk_level}</strong></p>
+                        <hr>
+                        <h3>Analysis Narrative:</h3>
+                        <p>${result.Narrative}</p>
                     `;
                 } else {
                     resultDiv.innerHTML = `<p style="color:red;">Error: ${result.detail}</p>`;

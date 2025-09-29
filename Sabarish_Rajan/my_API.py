@@ -5,21 +5,35 @@ import numpy as np
 import pandas as pd
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from datetime import datetime
+from datetime import date
 import os
 import shap
 from google import genai
+from google.genai.errors import APIError
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory ="static"), name = 'static')
+app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
-GEMINI_API_KEY = "AIzaSyBaMXC9Xshl0yyp6bSj3YP_VRcFTMbSOk4"
-gemini_client = genai.Client(api_key = GEMINI_API_KEY)
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if GEMINI_API_KEY:
+    try:
+        # Use the correct way to instantiate the client
+        gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+        print("Gemini Client initialized successfully from .env file.")
+    except Exception as e:
+        print(f"Failed to initialize Gemini Client. Check API Key: {e}")
+        gemini_client = None
+else:
+    print("GEMINI_API_KEY not found in environment or .env file.")
+    gemini_client = None
 
 
 try:
-    model = joblib.load('ML_Model.pkl')
-    ohe = joblib.load('OneHotEncoder.pkl')
+    model = joblib.load("ML_Model.pkl")
+    ohe = joblib.load("OneHotEncoder.pkl")
     print("Model and Encoder loaded successfully.")
 except FileNotFoundError:
     print("Model and/or Encoder not found.")
@@ -27,17 +41,18 @@ except FileNotFoundError:
     ohe = None
 
 try:
-    explainer = shap.TreeExplainer(model.named_steps['classifier'])
-    print('SHAP Explainer Initialized')
+    explainer = shap.TreeExplainer(model.named_steps["classifier"])
+    print("SHAP Explainer Initialized")
 except Exception as e:
     print("Error initializing explainer:{e}")
     explainer = None
+
 
 class InputData(BaseModel):
     months_as_customer: int
     age: int
     policy_number: int
-    policy_bind_date: datetime
+    policy_bind_date: date
     policy_state: str
     policy_csl: str
     policy_deductable: int
@@ -51,7 +66,7 @@ class InputData(BaseModel):
     insured_relationship: str
     capital_gains: int
     capital_loss: int
-    incident_date: datetime
+    incident_date: date
     incident_type: str
     collision_type: str
     incident_severity: str
@@ -73,76 +88,125 @@ class InputData(BaseModel):
     auto_model: str
     auto_year: int
 
-def generate_narrative(risk_level:str, probability:float, top_drivers:pd.Series, raw_data:dict):
+
+def generate_narrative(
+    risk_level: str, probability: float, top_drivers: pd.Series, raw_data: dict
+):
 
     if not gemini_client:
         return "GenAI services not available"
-    
-    prompt = ["You are Fraud ANalyst AI. Generate a concise, professional justification for flagging this insurance claim."
-    "The predictor model returned a {risk_level} status with a probability of {probability:.1%} of fraud."
-    "Analyze the most influential factors and their actual values to explain why the model flagged the claim."
-    "The influential factors are:"]
 
-    for features, shap_values in top_drivers.item():
-        feature_values = raw_data.get(feature, 'N/A')
-        influence = "pushed the score towards fraud" if shap_value>0 else "pulled the score away from fraud"
-        prompt.append(f"-Features:{feature}(Actual Value:{feature_values}). Its influence {influence}")
+    prompt_lines = [
+        "You are Fraud Analyst AI. Generate a concise, professional justification for flagging this insurance claim.",
+        f"The predictor model returned a **{risk_level}** status with a probability of **{probability:.1%}** of fraud.",
+        "Analyze the top 5 most influential factors and their actual values to explain why the model flagged the claim.",
+        "The influential factors are:",
+    ]
 
-    final_prompt = " ".join(prompt)+ " Focus on professional analysis of these factors and conclude with recomendations for actions."
+    for feature, shap_value in top_drivers.items():
+
+        original_feature = feature.split("_")[0] if "_" in feature else feature
+
+        feature_value = raw_data.get(feature, raw_data.get(original_feature, "N/A"))
+        if feature_value == "N/A" and "_" in feature:
+            feature_value = 1
+
+        influence = (
+            "pushed the score **towards fraud**"
+            if shap_value > 0
+            else "pulled the score **away from fraud**"
+        )
+        prompt_lines.append(
+            f"- **Feature:** `{feature}` (Actual Value: `{feature_value}`). Its influence {influence} (SHAP Value: `{shap_value:.4f}`)."
+        )
+
+    final_prompt = (
+        " ".join(prompt_lines)
+        + " Focus on professional analysis of these factors and conclude with recommendations for actions. In less than 20 lines. List only the top 3 influential factors without listing its shap values. Write the recomendations as a seperate paraghraph. Highlight the recomendation part. Do not print the important features as it is, instead write them in a user friendly manner. Do not use ** at all. Instead bolden the words in **."
+    )
 
     try:
-        response = gemini_client.generate_content(
-            model= "gemini-2.5-flash",
-            contents = final_prompt
+        response = gemini_client.models.generate_content(
+            model="gemini-2.5-flash", contents=final_prompt
         )
         return response.text
     except APIError as e:
         return "API Error: Could not generate narrative."
     except Exception as e:
+        print(f"Error occured:{e}")
         return "Unexpected error encountered. Cannot generate narrative."
+
 
 @app.get("/")
 def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+
 @app.post("/predict")
 async def predict_fraud(request: Request, data: InputData):
     if not model or not ohe:
         return {"Error": "Model or Encoder not loaded."}
-    
+
     input_df = pd.DataFrame([data.model_dump()])
 
-    input_df = input_df.replace('?', np.nan)
-    
-    input_df.rename(columns={
-    'capital_gains': 'capital-gains',
-    'capital_loss': 'capital-loss'
-}, inplace=True)
+    input_df = input_df.replace("?", np.nan)
 
+    input_df.rename(
+        columns={"capital_gains": "capital-gains", "capital_loss": "capital-loss"},
+        inplace=True,
+    )
 
-    input_df['authorities_contacted'] = input_df['authorities_contacted'].fillna('No')
-    input_df['collision_type'] = input_df['collision_type'].fillna(input_df['collision_type'].mode()[0])
-    input_df['property_damage'] = input_df['property_damage'].fillna('NO')
-    input_df['police_report_available'] = input_df['police_report_available'].fillna('NO')
+    input_df["authorities_contacted"] = input_df["authorities_contacted"].fillna("No")
+    input_df["collision_type"] = input_df["collision_type"].fillna(
+        input_df["collision_type"].mode()[0]
+    )
+    input_df["property_damage"] = input_df["property_damage"].fillna("NO")
+    input_df["police_report_available"] = input_df["police_report_available"].fillna(
+        "NO"
+    )
 
-    input_df['injury_claim_ratio']=input_df['injury_claim']/input_df['total_claim_amount']
+    """input_df['injury_claim_ratio']=input_df['injury_claim']/input_df['total_claim_amount']
     input_df['property_claim_ratio']=input_df['property_claim']/input_df['total_claim_amount']
     input_df['vehicle_claim_ratio']=input_df['vehicle_claim']/input_df['total_claim_amount']
+"""
+    input_df = input_df.drop(
+        [
+            "age",
+            "insured_hobbies",
+            "auto_make",
+            "policy_number",
+            "injury_claim",
+            "property_claim",
+            "vehicle_claim",
+            "policy_bind_date",
+            "incident_date",
+            "incident_location",
+            "insured_zip",
+            "auto_model",
+            "auto_year",
+        ],
+        axis=1,
+    )
+    cat_cols = input_df.select_dtypes(include=["object"]).columns
+    num_cols = input_df.select_dtypes(include=["int64", "float64"]).columns
+    encoded_cols = pd.DataFrame(
+        ohe.transform(input_df[cat_cols]),
+        columns=ohe.get_feature_names_out(cat_cols),
+        index=input_df.index,
+    )
 
-    input_df = input_df.drop(['age','insured_hobbies','auto_make', 'policy_number','injury_claim','property_claim','vehicle_claim', 'policy_bind_date', 'incident_date', 'incident_location', 'insured_zip', 'auto_model', 'auto_year'], axis=1)
-    cat_cols = input_df.select_dtypes(include=['object']).columns
-    num_cols = input_df.select_dtypes(include=['int64', 'float64']).columns 
-    encoded_cols = pd.DataFrame(ohe.transform(input_df[cat_cols]), columns = ohe.get_feature_names_out(cat_cols), index = input_df.index)
-
-    processed_df = input_df.drop(cat_cols, axis = 1)
+    processed_df = input_df.drop(cat_cols, axis=1)
     processed_df = pd.concat([processed_df, encoded_cols], axis=1)
 
-    
-    processed_df['claim_to_premium_ratio'] = processed_df['total_claim_amount']/(processed_df['policy_annual_premium']+0.01)
-    processed_df['severity_of_incident']=processed_df['total_claim_amount']/(processed_df['witnesses']+0.01)
+    processed_df["claim_to_premium_ratio"] = processed_df["total_claim_amount"] / (
+        processed_df["policy_annual_premium"] + 0.01
+    )
+    processed_df["severity_of_incident"] = processed_df["total_claim_amount"] / (
+        processed_df["witnesses"] + 0.01
+    )
 
-    print(processed_df.columns)
-    fraud_prediction = model.predict_proba(processed_df)[:,1][0]
+    # print(processed_df.columns)
+    fraud_prediction = model.predict_proba(processed_df)[:, 1][0]
     fraud_probability = float(fraud_prediction)
     risk_level = "Low Risk"
     if fraud_probability > 0.7:
@@ -150,17 +214,14 @@ async def predict_fraud(request: Request, data: InputData):
     elif fraud_probability > 0.4:
         risk_level = "Medium Risk"
 
-    narrative = "Narrative Skipped or not generated"
+    genai_narrative = "Narrative Skipped or not generated"
 
-    if explainer and risk_level in ['Medium Risk', 'High Risk']:
+    if explainer and risk_level in ["Medium Risk", "High Risk"]:
+        scaled_df_for_shap = model.named_steps["scaler"].transform(processed_df)
+        shap_value = explainer.shap_values(scaled_df_for_shap)[0]
+        feature_names = processed_df.columns
 
-        shap_values = explainer.shap_values(processed_df)[1][0]
-        cat_cols = processed_df.select_dtypes(include=['object']).columns
-        num_cols = processed_df.select_dtypes(include=['int64', 'float64']).columns
-
-        feature_names = cat_cols + num_cols
-
-        shap_series= pd.Series(shape_values, index = feature_names)
+        shap_series = pd.Series(shap_value, index=feature_names)
 
         top_drivers_abs = shap_series.abs().sort_values(ascending=False).head(5)
         top_drivers_with_sign = shap_series.loc[top_drivers_abs.index]
@@ -172,8 +233,5 @@ async def predict_fraud(request: Request, data: InputData):
     return {
         "fraud_probability": fraud_probability,
         "risk_level": risk_level,
-        "Narrative" : genai_narrative
+        "Narrative": genai_narrative,
     }
-
-
-

@@ -115,7 +115,6 @@ print('% of non fraud classes :', round((total_claims - fraud)/total_claims * 10
 #Splitting the data into X and y
 X = df.drop('fraud_reported', axis = 1)
 y = df['fraud_reported']
-
 #feature Engineering
 
 X['claim_to_premium_ratio'] = X['total_claim_amount']/(X['policy_annual_premium']+0.01)
