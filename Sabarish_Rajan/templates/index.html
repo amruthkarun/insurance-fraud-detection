@@ -243,7 +243,7 @@
             <div><label for="incident_type">Incident Type:</label><br>
             <select id="incident_type" name = "incident_type" required>
                 <option value="" disabled selected>Select Incident Type</option>
-                <option value="Multi-vehicle-collision">Multi-vehicle Collision</option>
+                <option value="Multi-vehicle Collision">Multi-vehicle Collision</option>
                 <option value="Parked Car">Parked Car</option>
                 <option value="Single Vehicle Collision">Single Vehicle Collision</option>
                 <option value="Vehicle Theft">Vehicle Theft</option>
@@ -411,9 +411,9 @@
                 <input type="number" id="auto_year" name="auto_year" required><br><br>
             </div>
 
-            <div>
-                <button type="submit">Predict Fraud</button>
-            </div>
+            
+            <button type="submit">Predict Fraud</button>
+            
         </div>
         
     </form>
@@ -461,6 +461,9 @@
                         <hr>
                         <h3>Analysis Narrative:</h3>
                         <p>${result.Narrative}</p>
+                        <hr>
+                        <h3>SHAP Waterfall Plot:</h3>
+                        ${result.waterfall_plot ? `<img src="data:image/png;base64,${result.waterfall_plot}" alt="SHAP Waterfall Plot" style="max-width:100%;"/>` : "<p>Plot not available</p>"}
                     `;
                 } else {
                     resultDiv.innerHTML = `<p style="color:red;">Error: ${result.detail}</p>`;

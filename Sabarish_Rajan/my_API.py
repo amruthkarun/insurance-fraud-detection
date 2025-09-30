@@ -7,6 +7,12 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from datetime import date
 import os
+import io
+import matplotlib.pyplot as plt
+import base64
+import psycopg2
+from sqlalchemy import create_engine
+import json
 import shap
 from google import genai
 from google.genai.errors import APIError
@@ -30,6 +36,9 @@ else:
     print("GEMINI_API_KEY not found in environment or .env file.")
     gemini_client = None
 
+DB_URL = os.getenv("DB_URL")
+engine = create_engine(DB_URL)
+table_name = 'claims'
 
 try:
     model = joblib.load("ML_Model.pkl")
@@ -88,6 +97,18 @@ class InputData(BaseModel):
     auto_model: str
     auto_year: int
 
+def insert_new_claims(new_claim_data:pd.DataFrame, table_name:str, db_engine):
+    print('Attempting to insert new record into the database.')
+    try:
+        new_claim_data.to_sql(
+            name=table_name,
+            con=db_engine,
+            if_exists='append',
+            index=False
+        )
+        print('Succesfully added.')
+    except Exception as e:
+        print(f'Encountered an error: {e}')
 
 def generate_narrative(
     risk_level: str, probability: float, top_drivers: pd.Series, raw_data: dict
@@ -97,10 +118,10 @@ def generate_narrative(
         return "GenAI services not available"
 
     prompt_lines = [
-        "You are Fraud Analyst AI. Generate a concise, professional justification for flagging this insurance claim.",
+        "You are Fraud Analyst AI. Generate a concise, professional justification for the prediction of this insurance claim.",
         f"The predictor model returned a **{risk_level}** status with a probability of **{probability:.1%}** of fraud.",
         "Analyze the top 5 most influential factors and their actual values to explain why the model flagged the claim.",
-        "The influential factors are:",
+        "The influential factors are:"
     ]
 
     for feature, shap_value in top_drivers.items():
@@ -148,14 +169,15 @@ async def predict_fraud(request: Request, data: InputData):
         return {"Error": "Model or Encoder not loaded."}
 
     input_df = pd.DataFrame([data.model_dump()])
-
-    input_df = input_df.replace("?", np.nan)
+    
+    
 
     input_df.rename(
         columns={"capital_gains": "capital-gains", "capital_loss": "capital-loss"},
         inplace=True,
     )
-
+    new_claim_data = input_df
+    input_df = input_df.replace("?", np.nan)
     input_df["authorities_contacted"] = input_df["authorities_contacted"].fillna("No")
     input_df["collision_type"] = input_df["collision_type"].fillna(
         input_df["collision_type"].mode()[0]
@@ -213,10 +235,12 @@ async def predict_fraud(request: Request, data: InputData):
         risk_level = "High Risk"
     elif fraud_probability > 0.4:
         risk_level = "Medium Risk"
-
+    fraud_reported = False
+    if fraud_probability > 0.5:
+        fraud_reported = True
     genai_narrative = "Narrative Skipped or not generated"
-
-    if explainer and risk_level in ["Medium Risk", "High Risk"]:
+    new_claim_data['fraud_reported'] = fraud_reported
+    if explainer and risk_level in ["Low Risk", "Medium Risk", "High Risk"]:
         scaled_df_for_shap = model.named_steps["scaler"].transform(processed_df)
         shap_value = explainer.shap_values(scaled_df_for_shap)[0]
         feature_names = processed_df.columns
@@ -229,9 +253,26 @@ async def predict_fraud(request: Request, data: InputData):
         genai_narrative = generate_narrative(
             risk_level, fraud_probability, top_drivers_with_sign, data.model_dump()
         )
+    insert_new_claims(new_claim_data, table_name, engine)
+    
 
+    waterfall_plot_base64 = None
+    try:
+        shap.plots._waterfall.waterfall_legacy(
+            explainer.expected_value, shap_value, feature_names=processed_df.columns, show=False
+        )
+        buf = io.BytesIO()
+        plt.savefig(buf, format="png", bbox_inches="tight")
+        buf.seek(0)
+        waterfall_plot_base64 = base64.b64encode(buf.read()).decode("utf-8")
+        buf.close()
+        plt.close()
+    except Exception as e:
+        print(f"Error generating SHAP waterfall: {e}")
+    
     return {
         "fraud_probability": fraud_probability,
         "risk_level": risk_level,
         "Narrative": genai_narrative,
+        "waterfall_plot": waterfall_plot_base64
     }
