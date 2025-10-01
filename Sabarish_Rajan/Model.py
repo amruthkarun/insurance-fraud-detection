@@ -20,9 +20,13 @@ from imblearn.over_sampling import SMOTE
 from scipy.stats import randint, uniform
 from sqlalchemy import create_engine
 import psycopg2
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 #connecting to PostgreSQL database
-DB_URL = 'postgresql://postgres:1905@localhost:5432/Insuarance_fraud'
+DB_URL = os.getenv("DB_URL")
 engine = create_engine(DB_URL)
 query = "SELECT * FROM claims"
 df = pd.read_sql(query, engine)

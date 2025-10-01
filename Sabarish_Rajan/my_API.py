@@ -9,6 +9,9 @@ from datetime import date
 import os
 import io
 import matplotlib.pyplot as plt
+import plotly.express as px
+import plotly.graph_objects as go
+import seaborn as sns
 import base64
 import psycopg2
 from sqlalchemy import create_engine
@@ -187,6 +190,8 @@ async def predict_fraud(request: Request, data: InputData):
         "NO"
     )
 
+    fig, ax = plt.subplots(figsize=(8,4))
+
     """input_df['injury_claim_ratio']=input_df['injury_claim']/input_df['total_claim_amount']
     input_df['property_claim_ratio']=input_df['property_claim']/input_df['total_claim_amount']
     input_df['vehicle_claim_ratio']=input_df['vehicle_claim']/input_df['total_claim_amount']
@@ -276,3 +281,79 @@ async def predict_fraud(request: Request, data: InputData):
         "Narrative": genai_narrative,
         "waterfall_plot": waterfall_plot_base64
     }
+@app.get("/analysis_plots")
+async def plots():
+    try:
+        query = "SELECT * FROM claims"
+        df = pd.read_sql(query, engine)
+
+        df = df.drop_duplicates()
+        df = df.replace('?', np.nan)
+
+
+        df['authorities_contacted'] = df['authorities_contacted'].replace(np.nan, 'No')
+        df['fraud_reported'] = df['fraud_reported'].replace({'Y':1, 'N':0}).astype(int)
+        df['collision_type'] = df['collision_type'].fillna(df['collision_type'].mode()[0])
+        df['property_damage'] = df['property_damage'].fillna('NO')
+        df['police_report_available'] = df['police_report_available'].fillna('NO')
+
+        df_corr = df[df.dtypes[(df.dtypes == 'float64') | (df.dtypes == 'int64')].index].corr()
+
+        df['injury_claim_ratio']=df['injury_claim']/df['total_claim_amount']
+        df['property_claim_ratio']=df['property_claim']/df['total_claim_amount']
+        df['vehicle_claim_ratio']=df['vehicle_claim']/df['total_claim_amount']
+
+        df = df.drop(['age','insured_hobbies','auto_make', 'policy_number','injury_claim','property_claim','vehicle_claim', 'policy_bind_date', 'incident_date', 'incident_location', 'insured_zip', 'auto_model', 'auto_year'], axis=1)
+
+
+        df_corr = df[df.dtypes[(df.dtypes == 'float64') | (df.dtypes == 'int64')].index].corr()
+
+        fig_corr = px.imshow(
+            df_corr,
+            text_auto=".2f", # Format text to 2 decimal places
+            aspect="auto",
+            color_continuous_scale='RdBu_r', 
+            title='Correlation Matrix of Numerical Features'
+        )
+        fig_corr.update_layout(height=800, width=1000, margin=dict(l=10, r=10, t=50, b=10))
+        
+        correlation_heatmap_json = fig_corr.to_json()
+
+        Q1 = df['policy_annual_premium'].quantile(0.25)
+        Q3 = df['policy_annual_premium'].quantile(0.75)
+        IQR = Q3 - Q1
+        filter = (df['policy_annual_premium'] >= Q1 - 1.5 * IQR) & (df['policy_annual_premium'] <= Q3 + 1.5 * IQR)
+        df = df.loc[filter]
+
+        Q1 = df['total_claim_amount'].quantile(0.25)
+        Q3 = df['total_claim_amount'].quantile(0.75)
+        IQR = Q3 - Q1
+        filter = (df['total_claim_amount']>=Q1 -1.5*IQR) & (df['total_claim_amount']<=Q3 + 1.5*IQR)
+        df = df.loc[filter]
+
+        cols_to_plot = ['policy_annual_premium', 'total_claim_amount']
+        boxplot_figures = []
+        
+        for col in cols_to_plot:
+            fig_box = px.box(
+                df,
+                x=col,
+                orientation='h',
+                title=f'Box Plot of {col} (After Outlier Removal)'
+            )
+            fig_box.update_layout(height=400, width=500)
+            boxplot_figures.append(fig_box.to_json())
+
+        return {
+            "correlation_heatmap":correlation_heatmap_json,
+            "outlier_boxplots":boxplot_figures,
+            "Status":"Success"
+        }
+    except Exception as e:
+        print(f"Error loading plots: {e}")
+        return{
+            "Status":"Error",
+            "Detail":f"Failed to load plots:{e}",
+            "correlation_heatmap":"Cannot load plot",
+            "outlier_boxplots":"Cannot load plot"
+        }

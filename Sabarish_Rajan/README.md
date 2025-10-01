@@ -26,6 +26,4 @@ Integrate PostgreSQL for storing claim data and risk assessments, utilizing thre
 
 #### I have decided to use a parallel method of completing this project. I will be working on building the model and frontend/ backend development parallely.
 
-The final models that are in the project is XGBoost Classifier giving an accuracy of 83% and a F1 score of 0.70.
-
 ### Model description
