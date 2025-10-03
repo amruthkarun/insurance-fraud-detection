@@ -20,13 +20,9 @@ from imblearn.over_sampling import SMOTE
 from scipy.stats import randint, uniform
 from sqlalchemy import create_engine
 import psycopg2
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
 
 #connecting to PostgreSQL database
-DB_URL = os.getenv("DB_URL")
+DB_URL = 'postgresql://postgres:1905@localhost:5432/Insuarance_fraud'
 engine = create_engine(DB_URL)
 query = "SELECT * FROM claims"
 df = pd.read_sql(query, engine)
@@ -115,12 +111,11 @@ total_claims = len(df)
 print('%age of fraud classes :', round(fraud/total_claims * 100,2))
 print('% of non fraud classes :', round((total_claims - fraud)/total_claims * 100,2))
 
-
 #Splitting the data into X and y
 X = df.drop('fraud_reported', axis = 1)
 y = df['fraud_reported']
 #feature Engineering
-
+X = X.fillna(0)
 X['claim_to_premium_ratio'] = X['total_claim_amount']/(X['policy_annual_premium']+0.01)
 X['severity_of_incident']=X['total_claim_amount']/(X['witnesses']+0.01)
 
