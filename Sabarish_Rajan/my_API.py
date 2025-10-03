@@ -176,6 +176,7 @@ async def predict_fraud(request: Request, data: InputData):
         columns={"capital_gains": "capital-gains", "capital_loss": "capital-loss"},
         inplace=True,
     )
+    
     new_claim_data = input_df
     input_df = input_df.replace("?", np.nan)
     input_df["authorities_contacted"] = input_df["authorities_contacted"].fillna("No")

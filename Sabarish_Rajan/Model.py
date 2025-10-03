@@ -102,6 +102,7 @@ for cols in df[col]:
     sns.boxplot(x = df[cols])
     plt.pyplot.show()'''
 
+
 #getting the number of fraud and non fraud cases
 class_counts = df['fraud_reported'].value_counts()
 fraud = class_counts.loc[1.0]

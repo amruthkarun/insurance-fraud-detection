@@ -8,7 +8,7 @@ Due to the heavily imbalanced nature of fraud datasets, the final XGBoost model 
 
 ## 1. Problem Statement
 
-#### Date - 11th September 2025
+**Date - 11th September 2025**
 
 Develop a platform using Python to analyze and detect fraudulent insurance claims using open-source datasets and historical claim data. Build a web application with FastAPI, apply machine learning models for fraud detection, and assess risk levels. Implement threading for efficient data processing and integrate PostgreSQL for data management. (e.g., improvisations can be made in feature engineering, incorporating external risk factors, and applying responsible AI concepts for ethical decision-making.)
 
