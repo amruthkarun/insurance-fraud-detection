@@ -10,6 +10,13 @@ The dataset contains **32 features** in total:
 
 It includes **15,420 records**, of which only **6% (923 records)** are labeled as fraudulent, indicating a **highly imbalanced dataset**.
 
+###  Environment Setup
+
+Two separate virtual environments are created for better modularity and dependency management:
+
+- **`fraud_ml`** – used for machine learning tasks such as data preprocessing, feature extraction, model training, and evaluation.  
+- **`fraud_api`** – used for API development and deployment using FastAPI, integrated with the trained ML model and database.
+
 
 ##  Model Performance Summary
 
