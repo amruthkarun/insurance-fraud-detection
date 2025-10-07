@@ -1,3 +1,16 @@
+##Overview
+So far it involves building an end-to-end insurance fraud detection system that collects and preprocesses claim data, applies machine learning models for fraud prediction, and enhances accuracy through feature engineering. A FastAPI-based web application with interactive dashboards is developed for visualization, while PostgreSQL is integrated for data storage.
+
+###  Dataset Overview
+
+The dataset contains **32 features** in total:
+- **6 ordinal features**
+- **25 categorical features**
+- **1 class label**: `fraud` or `not-fraud`
+
+It includes **15,420 records**, of which only **6% (923 records)** are labeled as fraudulent, indicating a **highly imbalanced dataset**.
+
+
 ##  Model Performance Summary
 
 | Model | Accuracy | Precision | Recall | F1-Score |
