@@ -17,16 +17,17 @@ import shap
 from google import genai
 from google.genai.errors import APIError
 from dotenv import load_dotenv
-
+from data_prep import DataPreprocessor
 load_dotenv()
 
 app = FastAPI()
+
+processor = DataPreprocessor()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if GEMINI_API_KEY:
     try:
-        # Use the correct way to instantiate the client
         gemini_client = genai.Client(api_key=GEMINI_API_KEY)
         print("Gemini Client initialized successfully from .env file.")
     except Exception as e:
@@ -178,34 +179,9 @@ async def predict_fraud(request: Request, data: InputData):
     )
     
     new_claim_data = input_df
-    input_df = input_df.replace("?", np.nan)
-    input_df["authorities_contacted"] = input_df["authorities_contacted"].fillna("No")
-    input_df["collision_type"] = input_df["collision_type"].fillna(input_df["collision_type"].mode()[0])
-    input_df["property_damage"] = input_df["property_damage"].fillna("NO")
-    input_df["police_report_available"] = input_df["police_report_available"].fillna("NO")
 
-    """input_df['injury_claim_ratio']=input_df['injury_claim']/input_df['total_claim_amount']
-    input_df['property_claim_ratio']=input_df['property_claim']/input_df['total_claim_amount']
-    input_df['vehicle_claim_ratio']=input_df['vehicle_claim']/input_df['total_claim_amount']
-"""
-    input_df = input_df.drop(
-        [
-            "age",
-            "insured_hobbies",
-            "auto_make",
-            "policy_number",
-            "injury_claim",
-            "property_claim",
-            "vehicle_claim",
-            "policy_bind_date",
-            "incident_date",
-            "incident_location",
-            "insured_zip",
-            "auto_model",
-            "auto_year",
-        ],
-        axis=1,
-    )
+    input_df = processor._clean(input_df)
+
     cat_cols = input_df.select_dtypes(include=["object"]).columns
     num_cols = input_df.select_dtypes(include=["int64", "float64"]).columns
     encoded_cols = pd.DataFrame(
@@ -273,3 +249,4 @@ async def predict_fraud(request: Request, data: InputData):
         "Narrative": genai_narrative,
         "waterfall_plot": waterfall_plot_base64
     }
+    

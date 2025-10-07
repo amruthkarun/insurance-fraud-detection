@@ -20,6 +20,7 @@ from imblearn.over_sampling import SMOTE
 from scipy.stats import randint, uniform
 from sqlalchemy import create_engine
 import psycopg2
+from data_prep import DataPreprocessor
 
 #connecting to PostgreSQL database
 DB_URL = 'postgresql://postgres:1905@localhost:5432/Insuarance_fraud'
@@ -28,34 +29,9 @@ query = "SELECT * FROM claims"
 df = pd.read_sql(query, engine)
 
 
-df = df.drop_duplicates()
-df = df.replace('?', np.nan)
+processor = DataPreprocessor()
 
-
-df['authorities_contacted'] = df['authorities_contacted'].replace(np.nan, 'No')
-df['fraud_reported'] = df['fraud_reported'].replace({'Y':1, 'N':0}).astype(int)
-df['collision_type'] = df['collision_type'].fillna(df['collision_type'].mode()[0])
-df['property_damage'] = df['property_damage'].fillna('NO')
-df['police_report_available'] = df['police_report_available'].fillna('NO')
-
-df_corr = df[df.dtypes[(df.dtypes == 'float64') | (df.dtypes == 'int64')].index].corr()
-
-'''plt.pyplot.figure(figsize=(12,10))
-sns.heatmap(df_corr, annot=True)
-plt.pyplot.show()'''
-
-df['injury_claim_ratio']=df['injury_claim']/df['total_claim_amount']
-df['property_claim_ratio']=df['property_claim']/df['total_claim_amount']
-df['vehicle_claim_ratio']=df['vehicle_claim']/df['total_claim_amount']
-
-#based on the correlation data we drop the following columns
-df = df.drop(['age','insured_hobbies','auto_make', 'policy_number','injury_claim','property_claim','vehicle_claim', 'policy_bind_date', 'incident_date', 'incident_location', 'insured_zip', 'auto_model', 'auto_year'], axis=1)
-
-df_corr = df[df.dtypes[(df.dtypes == 'float64') | (df.dtypes == 'int64')].index].corr()
-
-'''plt.figure(figsize=(12,10))
-sns.heatmap(df_corr, annot=True)
-plt.show()'''
+df = processor._clean(df)
 
 #print(df.info())
 
@@ -70,38 +46,7 @@ df = pd.concat([df, encoded_cols],axis=1)
 df = df.drop(cat_cols, axis=1)
 #print(df.shape)
 
-#identifying outliers
-'''num_cols = df.select_dtypes(include=['int64','float64']).columns
-for cols in num_cols:
-    plt.pyplot.figure()
-    sns.boxplot(x = df[cols])
-    plt.pyplot.show()'''
-
-#Policy_annual premium has few outliers, we will remove them
-Q1 = df['policy_annual_premium'].quantile(0.25)
-Q3 = df['policy_annual_premium'].quantile(0.75)
-IQR = Q3 - Q1
-filter = (df['policy_annual_premium'] >= Q1 - 1.5 * IQR) & (df['policy_annual_premium'] <= Q3 + 1.5 * IQR)
-df = df.loc[filter]
-
-#Umbrella limit has 50% of the data as 0, hence we create a new binary column
-#df['umbrella_limit_'] = np.where(df['umbrella_limit']==0,0,1)
-#df= df.drop('umbrella_limit', axis=1)
-#Making an umbrella limit column did not improve the model score, hence we are not using it.
-
-
-# total_claim_amount has few outliers, we will remove them
-Q1 = df['total_claim_amount'].quantile(0.25)
-Q3 = df['total_claim_amount'].quantile(0.75)
-IQR = Q3 - Q1
-filter = (df['total_claim_amount']>=Q1 -1.5*IQR) & (df['total_claim_amount']<=Q3 + 1.5*IQR)
-df = df.loc[filter]
-'''col = ['policy_annual_premium', 'total_claim_amount']
-for cols in df[col]:
-    plt.pyplot.figure()
-    sns.boxplot(x = df[cols])
-    plt.pyplot.show()'''
-
+df = processor._preprocessing(df)
 
 #getting the number of fraud and non fraud cases
 class_counts = df['fraud_reported'].value_counts()
