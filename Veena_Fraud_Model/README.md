@@ -1,4 +1,4 @@
-##Overview
+## Overview
 So far it involves building an end-to-end insurance fraud detection system that collects and preprocesses claim data, applies machine learning models for fraud prediction, and enhances accuracy through feature engineering. A FastAPI-based web application with interactive dashboards is developed for visualization, while PostgreSQL is integrated for data storage.
 
 ###  Dataset Overview
