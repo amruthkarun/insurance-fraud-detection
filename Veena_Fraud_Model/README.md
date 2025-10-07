@@ -33,4 +33,10 @@ Two separate virtual environments are created for better modularity and dependen
 **Best Model:**  Gradient Boosting Classifier  
 **F1-Score:** 0.9050  
 
+##  Database Setup 
+
+Created a database named fruad_apidb and two tables are created on the database;
+
+- **claims**
+- **risk_assesments**
 
