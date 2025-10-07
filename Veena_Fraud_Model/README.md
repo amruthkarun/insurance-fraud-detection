@@ -33,6 +33,17 @@ Two separate virtual environments are created for better modularity and dependen
 **Best Model:**  Gradient Boosting Classifier  
 **F1-Score:** 0.9050  
 
+##  Fastapi Interface
+
+## Frontend of the FastAPI App
+
+The FastAPI application includes a **user-friendly web interface** built using **HTML** and **CSS**. The frontend allows users to input insurance claim details and view fraud prediction results in a visual dashboard.  
+
+### Key Features
+
+- **HTML Forms**: Users can enter claim information
+- **CSS Styling**: Custom CSS is used to style the form and result display for a clean and responsive interface.
+
 ##  Database Setup 
 
 Created a database named fruad_apidb and two tables are created on the database;
