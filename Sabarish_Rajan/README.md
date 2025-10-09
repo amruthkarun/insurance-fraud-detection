@@ -79,10 +79,10 @@ Backend API (FastAPI, my_API.py)<br>
 | **Logistic Regression (Baseline)** | 0.46      | 0.70                 | 0.55     |
 | **Descision Tree Classifier**      | 0.46      | 0.70                 | 0.55     |
 | **Random Forest Classifier**       | 0.80      | 0.51                 | 0.61     |
-| **XGBoost Classifier**             | 0.61      | 0.80                 | 0.70     |
+| **XGBoost Classifier**             | 0.64      | 0.82                 | 0.72     |
 | **Neural Networks**                | 0.64      | 0.71                 | 0.67     |
 
-Key Findings : The XGBoost Classifier was identified as the best performing model. By using SMOTE oversampling and optimizing the final prediction threshold for the F1-Score, the model achieved an F1-Score of 0.70 on the test set. The high Recall (estimated around 0.80) indicates the model is highly effective at minimizing missed fraud cases (False Negatives), which is a critical priority in insurance fraud detection. The final model (ML_Model.pkl) and OneHotEncoder.pkl are saved for deployment.
+Key Findings : The XGBoost Classifier was identified as the best performing model. By using SMOTE oversampling and optimizing the final prediction threshold for the F1-Score, the model achieved an F1-Score of 0.72 on the test set. The high Recall (estimated around 0.84) indicates the model is highly effective at minimizing missed fraud cases (False Negatives), which is a critical priority in insurance fraud detection. The final model (ML_Model.pkl) and OneHotEncoder.pkl are saved for deployment.
 
 ## 6. Deployment and API service
 

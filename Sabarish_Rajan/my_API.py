@@ -145,7 +145,8 @@ def generate_narrative(
     final_prompt = (
         " ".join(prompt_lines)
         + " Focus on professional analysis of these factors and conclude with recommendations for actions. In less than 20 lines. List only the top 3 influential factors without listing its shap values. Write the recomendations as a seperate paraghraph. Highlight the recomendation part. Do not print the important features as it is, instead write them in a user friendly manner. Do not use ** at all. Instead bolden the words in **."
-    )
+        +"Check the Accident state and the the accident city."
+    )    
 
     try:
         response = gemini_client.models.generate_content(
@@ -212,6 +213,7 @@ async def predict_fraud(request: Request, data: InputData):
     if fraud_probability > 0.5:
         fraud_reported = True
     genai_narrative = "Narrative Skipped or not generated"
+    #new_claim_data['fraud_reported'] = new_claim_data['fraud_reported'].astype(bool)
     new_claim_data['fraud_reported'] = fraud_reported
     if explainer and risk_level in ["Low Risk", "Medium Risk", "High Risk"]:
         scaled_df_for_shap = model.named_steps["scaler"].transform(processed_df)
