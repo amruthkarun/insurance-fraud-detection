@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Insurance Fraud Detection</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h2>Insurance Fraud Detection</h2>
+
+    
+    <form action="/predict" method="post">
+        <label>Month:</label>
+        <input type="text" name="Month" value="{{ Month or '' }}"><br>
+
+        <label>Day Of Week:</label>
+        <input type="text" name="DayOfWeek" value="{{ DayOfWeek or '' }}"><br>
+
+        <label>Make:</label>
+        <input type="text" name="Make" value="{{ Make or '' }}"><br>
+
+        <label>Accident Area:</label>
+        <input type="text" name="AccidentArea" value="{{ AccidentArea or '' }}"><br>
+
+        <label>Sex:</label>
+        <input type="text" name="Sex" value="{{ Sex or '' }}"><br>
+
+        <label>Marital Status:</label>
+        <input type="text" name="MaritalStatus" value="{{ MaritalStatus or '' }}"><br>
+
+        <label>Age:</label>
+        <input type="number" name="Age" value="{{ Age or '' }}"><br>
+
+        <label>Policy Type:</label>
+        <input type="text" name="PolicyType" value="{{ PolicyType or '' }}"><br>
+
+        <label>Vehicle Category:</label>
+        <input type="text" name="VehicleCategory" value="{{ VehicleCategory or '' }}"><br>
+
+        <label>Vehicle Price:</label>
+        <input type="text" name="VehiclePrice" value="{{ VehiclePrice or '' }}"><br>
+
+        <label>Number of Cars:</label>
+        <input type="number" name="NumberOfCars" value="{{ NumberOfCars or '' }}"><br>
+
+        <button type="submit">Predict Fraud</button>
+    </form>
+
+    {% if result %}
+        <h2>Prediction Result</h2>
+        <p><strong>Fraud Probability:</strong> {{ (result.prob * 100) | round(2) }}%</p>
+        <p><strong>Risk Level:</strong> {{ result.risk }}</p>
+        <div>
+            {{ graph | safe }}
+        </div>
+    {% endif %}
+</body>
+</html>
