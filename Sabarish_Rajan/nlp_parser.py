@@ -16,7 +16,11 @@ class extract_incident_data():
             raise ValueError("GEMINI_API_KEY not found in environment variables.")
     def check_key(self):
         if self.GEMINI_KEY:
-            print('API Key loaded succefully')
+            try:
+                gemini_client = genai.Client(api_key = self.GEMINI_KEY)
+                print('GenAI Client loaded successfully')
+            except Exception as e:
+                print(f'Error loading Client: {e}')
         else:
             print('API key not found.')
          
@@ -61,7 +65,7 @@ class extract_incident_data():
         num_feat = self.numeric_features
         properties={}
         for feat in all_feat:
-            prop_type = 'integer' if feat in num_feat else 'string'
+            prop_type = 'int' if feat in num_feat else 'object'
 
             properties[feat]={"type":prop_type}
 
@@ -74,43 +78,27 @@ class extract_incident_data():
 
     def call_genai_api(self,prompt:str):
         model_name = 'gemini-2.5-flash-preview-05-20'
-        api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={self.GEMINI_KEY}"
         max_tries = 5
         response_schema = self.schema_gen()
-
-        payload={
-            'contents':[{'parts':[{'text':prompt}]}],
-            'tools':[{'google_search':{}}],
-            'generationConfig': {
-                'responseMimeType':'application/json',
-                'responseSchema':response_schema
-            },
-            'systemInstruction': {
-                'parts':[{
-                'text' : (
-                    "You are an expert insurance claims processor and data extractor."
-                    "Your sole task is to analyze the user's claim data description and extract relevant information"
-                    "into a structured JSON object defined in the schema."
-                    "If any data point is not specified then you MUST set its value to 'null' or 0(for numerical values)."
-                    "DO NOT HALLUCINATE VALUES."
-                )
-                }]
-            },
-        }
+        response_schema['required'] = self.required_features
 
         json_string =""
 
         for tries in range(max_tries):
             try:
-                response = requests.post(api_url, headers = {'Content-Type':'application/json'}, json = payload)
-                response.raise_for_status()
-                result = response.json()
+                response = gemini_client.models.generate_content(
+                    model = model_name,
+                    contents = self.prompt,
+                    generation_config = {
+                        'response_schema': response_schema,
+                        'response_mime_type':'application/json',
+                        'tools': [google_search]
+                    }
+                )
 
-                candidate = result.get('candidates',[{}])[0]
-                if candidate:
-                    json_string = candidate.get('content',{}).get('parts',[])[0].get('text')
-                    if json_string:
-                        return json_string
+                json_string = response.text.strip()
+                if json_string:
+                    return json_string
 
             except Exception as e:
                 print(f"API call failed on {tries+1}:{e}")
@@ -162,11 +150,15 @@ class extract_incident_data():
             print("Description too short.")
             return {}
 
-        user_prompt = self.extraction_prompt(description)
+        try:
+            user_prompt = self.extraction_prompt(description)
 
-        json_string = self.call_genai_api(user_prompt)
+            json_string = self.call_genai_api(user_prompt)
 
-        structured_data = self.parse_and_validate_json(json_string)
+            structured_data = self.parse_and_validate_json(json_string)
+        except Exception as e:
+            print(f'Error:{e}')
+            return f'Error:{e}'
 
         return structured_data 
 
