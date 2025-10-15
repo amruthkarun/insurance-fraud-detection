@@ -51,3 +51,22 @@ Created a database named fruad_apidb and two tables are created on the database;
 - **claims**
 - **risk_assesments**
 
+flowchart TD
+
+A[User fills claim form on Web UI] --> B[FastAPI Backend receives input]
+
+B --> C[Data Preprocessing<br/>(Convert to DataFrame, clean numeric fields)]
+
+C --> D[ML Pipeline Prediction<br/>(final_pipeline.pkl)]
+
+D --> E[Compute Fraud Probability<br/>and Risk Level (High/Low)]
+
+E --> F[Plotly Visualization<br/>(Fraud Probability Bar Graph)]
+
+F --> H[Store in Database<br/>(Claim + RiskAssessment tables)]
+
+G --> I[Return Result to User<br/>(Probability, Risk, Graph, Explanations)]
+
+
+ 
+
