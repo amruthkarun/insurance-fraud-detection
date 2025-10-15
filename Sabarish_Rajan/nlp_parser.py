@@ -1,6 +1,7 @@
 from google import genai
 from dotenv import load_dotenv
 #from google.genai.errors import APIError
+from google.genai.types import Tool, GenerateContentConfig
 import json
 from typing import Dict,Any
 import requests
@@ -14,33 +15,53 @@ class extract_incident_data():
         self.GEMINI_KEY = os.getenv("GEMINI_API_KEY")
         if not self.GEMINI_KEY:
             raise ValueError("GEMINI_API_KEY not found in environment variables.")
-    def check_key(self):
-        if self.GEMINI_KEY:
+        else:
             try:
-                gemini_client = genai.Client(api_key = self.GEMINI_KEY)
+                self.gemini_client = genai.Client(api_key = self.GEMINI_KEY)
                 print('GenAI Client loaded successfully')
             except Exception as e:
                 print(f'Error loading Client: {e}')
-        else:
-            print('API key not found.')
+        
          
     required_features = [
-    'incident_city','incident_date','collision_type','incident_severity','authorities_contacted',
-    'incident_state', 'incident_location', 'incident_hour_of_the_day',
-    'number_of_vehicles_involved','property_damage','bodily_injuries', 'witnesses',
-    'police_report_available', 'total_claim_amount', 'injury_claim','property_claim', 'vehicle_claim',
-    'insured_hobbies', 'insured_occupation','insured_education_level', 'insured_relationship','auto_make',
-    'auto_model','auto_year'
+    'incident_date',
+    'incident_type',
+    'collision_type',
+    'incident_severity',
+    'authorities_contacted',
+    'incident_state',
+    'incident_city',
+    'incident_location',
+    'incident_hour_of_the_day',
+    'number_of_vehicles_involved',
+    'property_damage',
+    'bodily_injuries',
+    'witnesses',
+    'police_report_available',
+    'total_claim_amount',
+    'injury_claim',
+    'property_claim',
+    'vehicle_claim',
+    'auto_make',
+    'auto_model',
+    'auto_year'
     ]
 
     numeric_features = [
-    'incident_hour_of_the_day','number_of_vehicles_involved','bodily_injuries','witnesses','total_claim_amount',
-    'injury_claim','property_claim','vehicle_claim','auto_year'
+    'incident_hour_of_the_day',
+    'number_of_vehicles_involved',
+    'bodily_injuries',
+    'witnesses',
+    'total_claim_amount',
+    'injury_claim',
+    'property_claim',
+    'vehicle_claim',
+    'auto_year'
     ]
 
     def extraction_prompt(self, description:str):
 
-        prompt=f"""
+        self.prompt=f"""
     You are an expert insurance claims processor and data extraction agent.
     You are asked to analyse the following incident description provided by the user and 
     extract all the relevant details into a clean JSON object.
@@ -58,14 +79,14 @@ class extract_incident_data():
     ---
     """
 
-        return prompt
+        return self.prompt
 
     def schema_gen(self):
         all_feat = self.required_features
         num_feat = self.numeric_features
         properties={}
         for feat in all_feat:
-            prop_type = 'int' if feat in num_feat else 'object'
+            prop_type = 'integer' if feat in num_feat else 'string'
 
             properties[feat]={"type":prop_type}
 
@@ -81,19 +102,21 @@ class extract_incident_data():
         max_tries = 5
         response_schema = self.schema_gen()
         response_schema['required'] = self.required_features
-
+        '''tools_to_use = [
+            types.Tool(google_search={})
+        ]'''
         json_string =""
 
         for tries in range(max_tries):
             try:
-                response = gemini_client.models.generate_content(
+                response = self.gemini_client.models.generate_content(
                     model = model_name,
                     contents = self.prompt,
-                    generation_config = {
-                        'response_schema': response_schema,
-                        'response_mime_type':'application/json',
-                        'tools': [google_search]
-                    }
+                    #tools= tools_to_use,
+                    config = GenerateContentConfig(
+                        response_schema = response_schema,
+                        response_mime_type = 'application/json'
+                    )
                 )
 
                 json_string = response.text.strip()

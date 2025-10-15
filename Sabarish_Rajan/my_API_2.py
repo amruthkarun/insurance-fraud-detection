@@ -183,6 +183,8 @@ async def predict(request: Request, data: InputData):
         columns=ohe.get_feature_names_out(cat_cols),
         index=input_df.index,
     )
+    print(encoded_cols)
+
 
     processed_df = input_df.drop(cat_cols, axis=1)
     processed_df = pd.concat([processed_df, encoded_cols], axis=1)
@@ -194,7 +196,7 @@ async def predict(request: Request, data: InputData):
         processed_df["witnesses"] + 0.01
     )
 
-    # print(processed_df.columns)
+
     fraud_prediction = model.predict_proba(processed_df)[:, 1][0]
     fraud_probability = float(fraud_prediction)
     risk_level = "Low Risk"
@@ -206,7 +208,7 @@ async def predict(request: Request, data: InputData):
     if fraud_probability > 0.5:
         fraud_reported = True
     genai_narrative = "Narrative Skipped or not generated"
-    #new_claim_data['fraud_reported'] = new_claim_data['fraud_reported'].astype(bool)
+    
     new_claim_data['fraud_reported'] = fraud_reported
     if explainer and risk_level in ["Low Risk", "Medium Risk", "High Risk"]:
         scaled_df_for_shap = model.named_steps["scaler"].transform(processed_df)
