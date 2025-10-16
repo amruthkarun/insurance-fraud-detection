@@ -12,7 +12,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report, confusion_matrix, f1_score
 #from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
-from sklearn.preprocessing import OneHotEncoder
+#from sklearn.preprocessing import OneHotEncoder
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
 #from sklearn.model_selection import RandomizedSearchCV
@@ -21,6 +21,7 @@ from scipy.stats import randint, uniform
 from sqlalchemy import create_engine
 import psycopg2
 from data_prep import DataPreprocessor
+from preprocessor import _DataPreprocessor_
 
 #connecting to PostgreSQL database
 DB_URL = 'postgresql://postgres:1905@localhost:5432/Insuarance_fraud'
@@ -28,29 +29,26 @@ engine = create_engine(DB_URL)
 query = "SELECT * FROM claims"
 df = pd.read_sql(query, engine)
 
-
+preprocessor = _DataPreprocessor_()
 processor = DataPreprocessor()
 
 df = processor._clean(df)
 
 #print(df.info())
 
-#Encoding categorical data
-cat_cols = df.select_dtypes(include=['object']).columns
-ohe = OneHotEncoder(sparse_output=False, drop='first')
-encoded_cols = pd.DataFrame(ohe.fit_transform(df[cat_cols]), columns = ohe.get_feature_names_out(cat_cols))
 
-joblib.dump(ohe, 'OneHotEncoder.pkl')
-
-df = pd.concat([df, encoded_cols],axis=1)
-df = df.drop(cat_cols, axis=1)
 #print(df.shape)
 
 df = processor._preprocessing(df)
+df, feat_order = preprocessor.fit_transform(df)
 
+joblib.dump(preprocessor, 'data_preprocessor.pkl')
+joblib.dump(feat_order, 'Feature_order.pkl')
+
+print(df['fraud_reported'].head())
 #getting the number of fraud and non fraud cases
 class_counts = df['fraud_reported'].value_counts()
-fraud = class_counts.loc[1.0]
+fraud = class_counts.loc[True]
 
 total_claims = len(df)
 
@@ -131,6 +129,3 @@ print('Confusion Matrix: \n', confusion_matrix(y_test, y_pred))
 end_time = time.time()
 
 print('Time taken for model training and prediction: ', round(end_time - start_time,2), 'seconds')
-
-#The F1 score is 0.70 which is good considering the data is highly imbalanced. 
-# But using feature importance did not improve the score, hence we are not using it.

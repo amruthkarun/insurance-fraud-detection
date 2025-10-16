@@ -33,7 +33,7 @@ if GEMINI_API_KEY:
         gemini_client = genai.Client(api_key=GEMINI_API_KEY)
         print("Gemini Client initialized successfully from .env file.")
     except Exception as e:
-        print(f"Failed to initialize Gemini Client. Check API Key: {e}")
+        print(f"Failed to initialize Gemini Client. Check API Key:{e}")
         gemini_client = None
 else:
     print("GEMINI_API_KEY not found in environment or .env file.")
@@ -45,7 +45,8 @@ table_name = 'claims'
 
 try:
     model = joblib.load("ML_Model.pkl")
-    ohe = joblib.load("OneHotEncoder.pkl")
+    preprocessor_ = joblib.load("data_preprocessor.pkl")
+    feat_order = joblib.load("Feature_order.pkl")
     print("Model and Encoder loaded successfully.")
 except FileNotFoundError:
     print("Model and/or Encoder not found.")
@@ -56,7 +57,7 @@ try:
     explainer = shap.TreeExplainer(model.named_steps["classifier"])
     print("SHAP Explainer Initialized")
 except Exception as e:
-    print("Error initializing explainer:{e}")
+    print(f"Error initializing explainer:{e}")
     explainer = None
 
 class InputData(BaseModel):
@@ -175,19 +176,9 @@ async def predict(request: Request, data: InputData):
     new_claim_data = input_df
 
     input_df = processor._clean(input_df)
-
-    cat_cols = input_df.select_dtypes(include=["object"]).columns
-    num_cols = input_df.select_dtypes(include=["int64", "float64"]).columns
-    encoded_cols = pd.DataFrame(
-        ohe.transform(input_df[cat_cols]),
-        columns=ohe.get_feature_names_out(cat_cols),
-        index=input_df.index,
-    )
-    print(encoded_cols)
-
-
-    processed_df = input_df.drop(cat_cols, axis=1)
-    processed_df = pd.concat([processed_df, encoded_cols], axis=1)
+    processed_df = preprocessor_.preprocess_incident_data(input_df)
+    processed_df = input_df.reindex(columns = feat_order, fill_value = 0.0)
+    
 
     processed_df["claim_to_premium_ratio"] = processed_df["total_claim_amount"] / (
         processed_df["policy_annual_premium"] + 0.01
