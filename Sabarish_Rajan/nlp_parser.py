@@ -58,7 +58,7 @@ class extract_incident_data():
     'vehicle_claim',
     'auto_year'
     ]
-
+    
     def extraction_prompt(self, description:str):
 
         self.prompt=f"""
