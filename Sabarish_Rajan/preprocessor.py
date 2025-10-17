@@ -4,7 +4,7 @@ import pandas as pd
 class _DataPreprocessor_:
 
     def __init__(self):
-        self.ohe = OneHotEncoder(sparse_output = False, drop = 'first') 
+        self.ohe = OneHotEncoder(sparse_output = False, drop = 'first', handle_unknown = 'ignore') 
 
     def fit_transform(self, df:pd.DataFrame):
         cat_cols = df.select_dtypes(include=['object']).columns
@@ -34,8 +34,6 @@ class _DataPreprocessor_:
         processed_df = pd.concat([input_df, encoded_cols], axis = 1)
 
         processed_df = processed_df.drop(cat_cols, axis = 1)
-
-        #processed_df = processed_df.reindex(columns = feat_order, fill_value = 0.0)
 
         return processed_df
         

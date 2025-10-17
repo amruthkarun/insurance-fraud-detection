@@ -34,11 +34,6 @@ processor = DataPreprocessor()
 
 df = processor._clean(df)
 
-#print(df.info())
-
-
-#print(df.shape)
-
 df = processor._preprocessing(df)
 df, feat_order = preprocessor.fit_transform(df)
 

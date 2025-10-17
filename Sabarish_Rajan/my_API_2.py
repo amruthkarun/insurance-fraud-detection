@@ -48,10 +48,11 @@ try:
     preprocessor_ = joblib.load("data_preprocessor.pkl")
     feat_order = joblib.load("Feature_order.pkl")
     print("Model and Encoder loaded successfully.")
-except FileNotFoundError:
-    print("Model and/or Encoder not found.")
+except Exception as e:
+    print(f"Error loading Model or Encoder{e}")
     model = None
     ohe = None
+    feat_order= None
 
 try:
     explainer = shap.TreeExplainer(model.named_steps["classifier"])
@@ -151,7 +152,7 @@ extraction_agent = extract_incident_data()
 
 @app.post("/predict")
 async def predict(request: Request, data: InputData):
-    if not model or not ohe:
+    if not model or not preprocessor_:
         return {"Error:Model or Encoder not loaded."}
 
     feat_dict = data.model_dump()
@@ -170,7 +171,7 @@ async def predict(request: Request, data: InputData):
 
     input_df.rename(
         columns={"capital_gains": "capital-gains", "capital_loss": "capital-loss"},
-        inplace=True,
+        inplace=True
     )
     
     new_claim_data = input_df
@@ -187,7 +188,7 @@ async def predict(request: Request, data: InputData):
         processed_df["witnesses"] + 0.01
     )
 
-
+    processed_df = processed_df.drop('fraud_reported', axis = 1)
     fraud_prediction = model.predict_proba(processed_df)[:, 1][0]
     fraud_probability = float(fraud_prediction)
     risk_level = "Low Risk"
