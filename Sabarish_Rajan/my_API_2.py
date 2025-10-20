@@ -1,5 +1,5 @@
 import joblib
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, BackgroundTasks
 from pydantic import BaseModel
 import numpy as np
 import pandas as pd
@@ -19,11 +19,15 @@ from google.genai.errors import APIError
 from dotenv import load_dotenv
 from data_prep import DataPreprocessor
 from nlp_parser import extract_incident_data
+from insert_to_database import DatabaseInsertion
+import threading
+from anyio import to_thread
 
 load_dotenv()
 
 app = FastAPI()
 
+insertion = DatabaseInsertion()
 processor = DataPreprocessor()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
@@ -38,10 +42,6 @@ if GEMINI_API_KEY:
 else:
     print("GEMINI_API_KEY not found in environment or .env file.")
     gemini_client = None
-
-DB_URL = os.getenv("DB_URL")
-engine = create_engine(DB_URL)
-table_name = 'claims'
 
 try:
     model = joblib.load("ML_Model.pkl")
@@ -63,10 +63,10 @@ except Exception as e:
 
 class InputData(BaseModel):
     months_as_customer: int
-    age: int
-    policy_number: int
-    policy_bind_date: date
-    policy_state: str
+    age: int 
+    policy_number: int 
+    policy_bind_date: date = None
+    policy_state: str 
     policy_csl: str
     policy_deductable: int
     policy_annual_premium: float
@@ -80,21 +80,8 @@ class InputData(BaseModel):
     capital_gains: int
     capital_loss: int
 
-    description: str
+    description: str = None
 
-   
-def insert_new_claims(new_claim_data:pd.DataFrame, table_name:str, db_engine):
-    print('Attempting to insert new record into the database.')
-    try:
-        new_claim_data.to_sql(
-            name=table_name,
-            con=db_engine,
-            if_exists='append',
-            index=False
-        )
-        print('Succesfully added.')
-    except Exception as e:
-        print(f'Encountered an error: {e}')
 
 def generate_narrative(
     risk_level: str, probability: float, top_drivers: pd.Series, raw_data: dict
@@ -151,7 +138,7 @@ def read_root(request: Request):
 extraction_agent = extract_incident_data()
 
 @app.post("/predict")
-async def predict(request: Request, data: InputData):
+async def predict(request: Request, data: InputData, background_tasks:BackgroundTasks):
     if not model or not preprocessor_:
         return {"Error:Model or Encoder not loaded."}
 
@@ -215,7 +202,16 @@ async def predict(request: Request, data: InputData):
         genai_narrative = generate_narrative(
             risk_level, fraud_probability, top_drivers_with_sign, data.model_dump()
         )
-    insert_new_claims(new_claim_data, table_name, engine)
+    #Inserting User input to the database
+    insert = False
+    try:
+        background_tasks.add_task(insertion.insert_new_claims, new_claim_data)
+        print("Insertion added to background tasks.")
+        insert = True
+    except Exception as e:
+        print(f"Error occuerd while insertion:{e}")
+    
+    
     
 
     waterfall_plot_base64 = None
@@ -236,5 +232,6 @@ async def predict(request: Request, data: InputData):
         "fraud_probability": fraud_probability,
         "risk_level": risk_level,
         "Narrative": genai_narrative,
-        "waterfall_plot": waterfall_plot_base64
+        "waterfall_plot": waterfall_plot_base64,
+        "Insertion_Done":insert
     }

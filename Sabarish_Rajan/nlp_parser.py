@@ -63,7 +63,7 @@ class extract_incident_data():
 
         self.prompt=f"""
     You are an expert insurance claims processor and data extraction agent.
-    You are asked to analyse the following incident description provided by the user and 
+    Your sole purpose is to analyse the following incident description provided by the user and 
     extract all the relevant details into a clean JSON object.
     
     **INSTRUCTIONS**

@@ -305,6 +305,8 @@
                         <hr>
                         <h3>Analysis Narrative:</h3>
                         <p>${result.Narrative}</p>
+                        <h3>Insertion Status:</h3>
+                        <p>${result.Insertion_Done}</p>
                         <hr>
                         <h3>SHAP Waterfall Plot:</h3>
                         ${result.waterfall_plot ? `<img src="data:image/png;base64,${result.waterfall_plot}" alt="SHAP Waterfall Plot" style="max-width:100%;"/>` : "<p>Plot not available</p>"}
