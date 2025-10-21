@@ -18,7 +18,7 @@ class extract_incident_data():
         else:
             try:
                 self.gemini_client = genai.Client(api_key = self.GEMINI_KEY)
-                print('GenAI Client loaded successfully')
+                print('GenAI Client loaded successfully😊')
             except Exception as e:
                 print(f'Error loading Client: {e}')
         

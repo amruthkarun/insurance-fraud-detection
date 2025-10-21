@@ -1,6 +1,6 @@
-import joblib
-from fastapi import FastAPI, Request, BackgroundTasks
-from pydantic import BaseModel
+import joblib #For loading the trained model and encoder to a pkl file
+from fastapi import FastAPI, Request, BackgroundTasks #Creating the API, getting the values from the user from frontend, run tasks in the background so that the prediction logic can run smoothly
+from pydantic import BaseModel # Defining the schema of the input
 import numpy as np
 import pandas as pd
 from fastapi.templating import Jinja2Templates
@@ -8,29 +8,34 @@ from fastapi.staticfiles import StaticFiles
 from datetime import date
 import os
 import io
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import base64
-import psycopg2
-from sqlalchemy import create_engine
+import psycopg2 #PostgreSQL database connection
+from sqlalchemy import create_engine #Inseeting data into the database
 import json
-import shap
-from google import genai
+import shap #Explainer library
+from google import genai #GenAI client Library
 from google.genai.errors import APIError
 from dotenv import load_dotenv
-from data_prep import DataPreprocessor
-from nlp_parser import extract_incident_data
-from insert_to_database import DatabaseInsertion
+from data_prep import DataPreprocessor #Data Preprocessing class
+from nlp_parser import extract_incident_data #NLP Parser class
+from insert_to_database import DatabaseInsertion #Database Insertion class
+from narrative_generation import GenerateNarrative
 import threading
-from anyio import to_thread
+from anyio import to_thread #For running blocking database operations in a separate thread
+import asyncio
 
 load_dotenv()
 
 app = FastAPI()
 
-insertion = DatabaseInsertion()
-processor = DataPreprocessor()
+# Mount static files and templates
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+
+# Load Gemini API Key from environment variable
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if GEMINI_API_KEY:
     try:
@@ -42,7 +47,7 @@ if GEMINI_API_KEY:
 else:
     print("GEMINI_API_KEY not found in environment or .env file.")
     gemini_client = None
-
+# Load the model and preprocessor
 try:
     model = joblib.load("ML_Model.pkl")
     preprocessor_ = joblib.load("data_preprocessor.pkl")
@@ -54,13 +59,13 @@ except Exception as e:
     ohe = None
     feat_order= None
 
-try:
-    explainer = shap.TreeExplainer(model.named_steps["classifier"])
-    print("SHAP Explainer Initialized")
-except Exception as e:
-    print(f"Error initializing explainer:{e}")
-    explainer = None
+#Object creation
+insertion = DatabaseInsertion() 
+processor = DataPreprocessor()
+extraction_agent = extract_incident_data()
+shap_explainer = GenerateNarrative(model_ = model, gemini_client_ = gemini_client)
 
+# Define input data schema
 class InputData(BaseModel):
     months_as_customer: int
     age: int 
@@ -82,68 +87,22 @@ class InputData(BaseModel):
 
     description: str = None
 
+# Define API endpoints
 
-def generate_narrative(
-    risk_level: str, probability: float, top_drivers: pd.Series, raw_data: dict
-    ):
-
-    if not gemini_client:
-        return "GenAI services not available"
-
-    prompt_lines = [
-        "You are Fraud Analyst AI. Generate a concise, professional justification for the prediction of this insurance claim.",
-        f"The predictor model returned a **{risk_level}** status with a probability of **{probability:.1%}** of fraud.",
-        "Analyze the top 5 most influential factors and their actual values to explain why the model flagged the claim.",
-        "The influential factors are:"
-    ]
-
-    for feature, shap_value in top_drivers.items():
-
-        original_feature = feature.split("_")[0] if "_" in feature else feature
-
-        feature_value = raw_data.get(feature, raw_data.get(original_feature, "N/A"))
-        if feature_value == "N/A" and "_" in feature:
-            feature_value = 1
-
-        influence = (
-            "pushed the score **towards fraud**"
-            if shap_value > 0
-            else "pulled the score **away from fraud**"
-        )
-        prompt_lines.append(
-            f"- **Feature:** `{feature}` (Actual Value: `{feature_value}`). Its influence {influence} (SHAP Value: `{shap_value:.4f}`)."
-        )
-
-    final_prompt = (
-        " ".join(prompt_lines)
-        + " Focus on professional analysis of these factors and conclude with recommendations for actions. In less than 20 lines. List only the top 3 influential factors without listing its shap values. Write the recomendations as a seperate paraghraph. Highlight the recomendation part. Do not print the important features as it is, instead write them in a user friendly manner. Do not use ** at all. Instead bolden the words in **."
-        +"Check the Accident state and the the accident city."
-    )    
-
-    try:
-        response = gemini_client.models.generate_content(
-            model="gemini-2.5-flash", contents=final_prompt
-        )
-        return response.text
-    except APIError as e:
-        return "API Error: Could not generate narrative."
-    except Exception as e:
-        print(f"Error occured:{e}")
-        return "Unexpected error encountered. Cannot generate narrative."
-    
+# Root endpoint to serve the HTML page
 @app.get("/")
 def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-extraction_agent = extract_incident_data()
-
+# Prediction endpoint
 @app.post("/predict")
 async def predict(request: Request, data: InputData, background_tasks:BackgroundTasks):
+    # Check if model and preprocessor are loaded
     if not model or not preprocessor_:
         return {"Error:Model or Encoder not loaded."}
-
+    # Getting the input as a dictionary
     feat_dict = data.model_dump()
-
+    # Get the features extracted from descriptionusing NLP Parser
     extracted_feat_dict = extraction_agent.extract_data_from_des(data.description)
 
     if not extracted_feat_dict:
@@ -162,12 +121,12 @@ async def predict(request: Request, data: InputData, background_tasks:Background
     )
     
     new_claim_data = input_df
-
+    #Process the input data
     input_df = processor._clean(input_df)
     processed_df = preprocessor_.preprocess_incident_data(input_df)
     processed_df = input_df.reindex(columns = feat_order, fill_value = 0.0)
     
-
+    #Feature Engineering
     processed_df["claim_to_premium_ratio"] = processed_df["total_claim_amount"] / (
         processed_df["policy_annual_premium"] + 0.01
     )
@@ -176,6 +135,8 @@ async def predict(request: Request, data: InputData, background_tasks:Background
     )
 
     processed_df = processed_df.drop('fraud_reported', axis = 1)
+
+    #Predicting Fraud Probability
     fraud_prediction = model.predict_proba(processed_df)[:, 1][0]
     fraud_probability = float(fraud_prediction)
     risk_level = "Low Risk"
@@ -187,47 +148,71 @@ async def predict(request: Request, data: InputData, background_tasks:Background
     if fraud_probability > 0.5:
         fraud_reported = True
     genai_narrative = "Narrative Skipped or not generated"
-    
+
+    # Updating the new claim data with fraud reported
     new_claim_data['fraud_reported'] = fraud_reported
-    if explainer and risk_level in ["Low Risk", "Medium Risk", "High Risk"]:
-        scaled_df_for_shap = model.named_steps["scaler"].transform(processed_df)
-        shap_value = explainer.shap_values(scaled_df_for_shap)[0]
-        feature_names = processed_df.columns
 
-        shap_series = pd.Series(shap_value, index=feature_names)
+    #Generate SHAP explanations and Narrative
+    
+    args_for_narrative = (
+        risk_level, 
+        fraud_probability, 
+        data.model_dump(), 
+        processed_df
+    )
 
-        top_drivers_abs = shap_series.abs().sort_values(ascending=False).head(5)
-        top_drivers_with_sign = shap_series.loc[top_drivers_abs.index]
-
-        genai_narrative = generate_narrative(
-            risk_level, fraud_probability, top_drivers_with_sign, data.model_dump()
+    try:
+        genai_narrative = await to_thread.run_sync(
+            shap_explainer.generate_narrative,
+            *args_for_narrative
         )
-    #Inserting User input to the database
+        print('Narrative generated successfully')
+    except Exception as e:
+        print(f'Error during ai generation:{e}')
+        genai_narrative = "Error generating narrative."
+
     insert = False
+
     try:
         background_tasks.add_task(insertion.insert_new_claims, new_claim_data)
         print("Insertion added to background tasks.")
         insert = True
     except Exception as e:
         print(f"Error occuerd while insertion:{e}")
-    
-    
-    
 
+    #Generate SHAP Waterfall plot
     waterfall_plot_base64 = None
     try:
-        shap.plots._waterfall.waterfall_legacy(
-            explainer.expected_value, shap_value, feature_names=processed_df.columns, show=False
-        )
-        buf = io.BytesIO()
-        plt.savefig(buf, format="png", bbox_inches="tight")
-        buf.seek(0)
-        waterfall_plot_base64 = base64.b64encode(buf.read()).decode("utf-8")
-        buf.close()
-        plt.close()
+        expected_value = shap_explainer.expected_value[0]
+        shap_value = shap_explainer.shap_values
+        feature_names = shap_explainer.feature_names
+        if shap_value is not None and feature_names is not None:
+
+            shap.plots._waterfall.waterfall_legacy(
+                expected_value, 
+                shap_value, 
+                feature_names=feature_names, 
+                show=False
+            )
+
+            def save_fig(buf):
+                plt.savefig(buf, format='png', bbox_inches = 'tight')
+                plt.close()
+            plt_buf = io.BytesIO()
+            try:
+                await to_thread.run_sync(save_fig, plt_buf)
+
+                plt_buf.seek(0)
+                waterfall_plot_base64 = base64.b64encode(plt_buf.read()).decode("utf-8")
+                plt_buf.close()
+                print('Plot saved successfully.')
+            except Exception as e:
+                print(f"Error saving SHAP waterfall plot:{e}")
+
     except Exception as e:
         print(f"Error generating SHAP waterfall: {e}")
     
+    # Return the prediction and explanations
     return {
         "fraud_probability": fraud_probability,
         "risk_level": risk_level,
