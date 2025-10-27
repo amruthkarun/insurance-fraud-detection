@@ -1,0 +1,16 @@
+# backend/requirements.txt
+fastapi
+uvicorn[standard]
+scikit-learn
+pandas
+numpy
+pydantic
+psycopg2-binary
+SQLAlchemy
+google-genai
+matplotlib
+shap
+jinja2
+python-dotenv
+anyio
+

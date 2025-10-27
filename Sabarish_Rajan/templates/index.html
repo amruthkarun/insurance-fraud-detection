@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Insurance Fraud Detection</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
@@ -10,10 +11,12 @@
             color: #333;
             padding: 20px;
         }
+
         h1 {
             color: #4CAF50;
             text-align: center;
         }
+
         #claim-form {
             max-width: 1200px;
             margin: auto;
@@ -22,28 +25,35 @@
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
+
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
         }
-        .form-grid > div {
+
+        .form-grid>div {
             display: flex;
             flex-direction: column;
         }
+
         label {
             font-weight: bold;
             margin-bottom: 5px;
         }
+
         input {
             width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            box-sizing: border-box; /* Ensures padding doesn't affect total width */
+            box-sizing: border-box;
+            /* Ensures padding doesn't affect total width */
         }
+
         button {
-            grid-column: 1 / -1; /* Makes the button span all columns */
+            grid-column: 1 / -1;
+            /* Makes the button span all columns */
             padding: 15px;
             background-color: #4CAF50;
             color: white;
@@ -53,10 +63,13 @@
             font-size: 16px;
             margin-top: 20px;
         }
+
         button:hover {
             background-color: #45a049;
         }
-        #result, #analysis-section {
+
+        #result,
+        #analysis-section {
             max-width: 1200px;
             margin: 20px auto;
             padding: 20px;
@@ -64,25 +77,32 @@
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
+
         #result p {
             font-size: 1.2em;
             margin: 5px 0;
         }
+
         #result strong {
             color: #4CAF50;
         }
+
         .plot-container {
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
-            justify-content: center; /* Center plots horizontally */
+            justify-content: center;
+            /* Center plots horizontally */
         }
+
         .plot-box {
-            min-width: 45%; /* Ensures two plots can sit side-by-side */
+            min-width: 45%;
+            /* Ensures two plots can sit side-by-side */
             flex-grow: 1;
         }
     </style>
 </head>
+
 <body>
     <h1>Insurance Fraud Detection Platform</h1>
 
@@ -93,22 +113,22 @@
                 <label for="months_as_customer">Months as Customer:</label><br>
                 <input type="number" id="months_as_customer" name="months_as_customer" required><br><br>
             </div>
-            
+
             <div>
-                <label for ="age">Age:</label><br>
+                <label for="age">Age:</label><br>
                 <input type="number" id="age" name="age" required><br><br>
             </div>
-            
+
             <div>
-                <label for ="policy_number">Policy Number:</label><br>
-                <input type ="number" id = "policy_number" name="policy_number" required><br><br>
+                <label for="policy_number">Policy Number:</label><br>
+                <input type="number" id="policy_number" name="policy_number" required><br><br>
             </div>
-            
+
             <div>
                 <label for="policy_bind_date">Policy Bind Date (DD-MM-YYYY):</label><br>
                 <input type="date" id="policy_bind_date" name="policy_bind_date" required><br><br>
             </div>
-            
+
             <div>
                 <label for="policy_state">Policy State:</label><br>
                 <select id="policy_state" name="policy_state" required>
@@ -118,10 +138,10 @@
                     <option value="IL">Illinois (IL)</option>
                 </select><br><br>
             </div>
-            
+
 
             <div>
-                <label for ="policy_csl">Policy CSL:</label><br>
+                <label for="policy_csl">Policy CSL:</label><br>
                 <select id="policy_csl" name="policy_csl" required>
                     <option value="" disabled selected>Select Policy CSL</option>
                     <option value="100/300">100/300</option>
@@ -134,10 +154,11 @@
                 <label for="policy_deductable">Policy Deductable:</label><br>
                 <input type="number" id="policy_deductable" name="policy_deductable" required><br><br>
             </div>
-        
+
             <div>
                 <label for="policy_annual_premium">Annual Premium:</label><br>
-                <input type="number" step="0.01" id="policy_annual_premium" name="policy_annual_premium" required><br><br>
+                <input type="number" step="0.01" id="policy_annual_premium" name="policy_annual_premium"
+                    required><br><br>
             </div>
 
             <div>
@@ -151,8 +172,8 @@
             </div>
 
             <div>
-                <label for ="insured_sex">Insured Sex:</label><br>
-                <select id = "insured_sex" name = "insured_sex" required>
+                <label for="insured_sex">Insured Sex:</label><br>
+                <select id="insured_sex" name="insured_sex" required>
                     <option value="" disabled selected>Select Sex</option>
                     <option value="MALE">MALE</option>
                     <option value="FEMALE">FEMALE</option>
@@ -169,13 +190,13 @@
                     <option value="JD">JD</option>
                     <option value="Masters">Masters</option>
                     <option value="MD">MD</option>
-                    <option value ="PhD">PhD</option>
+                    <option value="PhD">PhD</option>
                 </select><br><br>
             </div>
 
-            <div>  
+            <div>
                 <label for="insured_occupation">Insured Occupation:</label><br>
-                <select id="insured_occupation" name = "insured_occupation" required>
+                <select id="insured_occupation" name="insured_occupation" required>
                     <option value="" disabled selected>Select Occupation</option>
                     <option value="adm-clerical">adm-clerical</option>
                     <option value="armed-forces">armed-forces</option>
@@ -198,7 +219,7 @@
 
             <div>
                 <label for="insured_hobbies">Insured Hobbies</label><br>
-                <select id="insured_hobbies" name = "insured_hobbies" required>
+                <select id="insured_hobbies" name="insured_hobbies" required>
                     <option value="" disabled selected>Select Hobbies</option>
                     <option value="base-jumping">base-jumping</option>
                     <option value="basketball">basketball</option>
@@ -223,10 +244,10 @@
                 </select><br><br>
             </div>
 
-        
+
             <div>
                 <label for="insured_relationship">Insured Relationship:</label><br>
-                <select id="insured_relationship" name = "insured_relationship" required>
+                <select id="insured_relationship" name="insured_relationship" required>
                     <option value="" disabled selected>Select Relationship</option>
                     <option value="husband">husband</option>
                     <option value="not-in-family">not-in-family</option>
@@ -239,7 +260,7 @@
 
 
             <div>
-                <label for="capital_gains">Capital Gains:</label><br>   
+                <label for="capital_gains">Capital Gains:</label><br>
                 <input type="number" id="capital_gains" name="capital_gains" required><br><br>
             </div>
 
@@ -248,34 +269,36 @@
                 <input type="number" id="capital_loss" name="capital_loss" required><br><br>
             </div>
         </div>
-        <div class = "form-section" style ="text-align: center;">
+        <div class="form-section" style="text-align: center;">
             <h2>Claim Description</h2>
             <div>
-                <label for = 'description'>Claim Description</label><br>
-                <textarea id = 'description' name ='description' rows="20" cols="150" placeholder="Describe the accident, location, time, and circumstances of the claim..." required></textarea><br><br>
+                <label for='description'>Claim Description</label><br>
+                <textarea id='description' name='description' rows="20" cols="150"
+                    placeholder="Describe the accident, location, time, and circumstances of the claim..."
+                    required></textarea><br><br>
             </div>
-        </div>    
-        <div style ="text-align: center;">
+        </div>
+        <div style="text-align: center;">
             <button type="submit">Predict Fraud</button>
         </div>
 
-    </form>    
+    </form>
 
     <div id="result"></div>
 
-        <script>
+    <script>
 
-        document.getElementById('claim-form').addEventListener('submit', async function(event) {
+        document.getElementById('claim-form').addEventListener('submit', async function (event) {
             event.preventDefault();
 
             const form = event.target;
             const formData = new FormData(form);
             const jsonData = {};
-            
+
             formData.forEach((value, key) => {
                 const inputElement = form.querySelector(`[name="${key}"]`);
                 const inputType = inputElement ? inputElement.type : null;
-                
+
                 if (inputType === 'number') {
                     jsonData[key] = parseFloat(value);
                 } else if (inputType === 'date') {
@@ -295,7 +318,7 @@
                 });
 
                 const result = await response.json();
-                
+
                 const resultDiv = document.getElementById('result');
                 if (response.ok) {
                     resultDiv.innerHTML = `
@@ -321,4 +344,5 @@
         });
     </script>
 </body>
+
 </html>

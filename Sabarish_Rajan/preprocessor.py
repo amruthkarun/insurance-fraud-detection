@@ -1,4 +1,4 @@
-addfrom sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder
 import pandas as pd
 
 class _DataPreprocessor_:
