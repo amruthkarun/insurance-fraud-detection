@@ -1,4 +1,4 @@
-# backend/requirements.txt
+# requirements.txt
 fastapi
 uvicorn[standard]
 scikit-learn
@@ -13,4 +13,5 @@ shap
 jinja2
 python-dotenv
 anyio
+xgboost
 

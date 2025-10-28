@@ -26,4 +26,4 @@ class DatabaseInsertion:
             )
             print('Succesfully added.')
         except Exception as e:
-            print(f'Encountered an error: {e}')
+            print(f'Encountered an error: {e}🛑')

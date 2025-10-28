@@ -1,0 +1,22 @@
+# .dockerignore
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+myenv/
+
+# Data
+*.csv
+*.xlsx
+
+# Docs
+*.md
+*.docx
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/

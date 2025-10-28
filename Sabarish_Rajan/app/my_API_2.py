@@ -31,6 +31,8 @@ load_dotenv()
 
 app = FastAPI()
 
+DB_URL = os.getenv('DB_URL')
+
 # Mount static files and templates
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
@@ -42,7 +44,7 @@ if GEMINI_API_KEY:
         gemini_client = genai.Client(api_key=GEMINI_API_KEY)
         print("Gemini Client initialized successfully from .env file.")
     except Exception as e:
-        print(f"Failed to initialize Gemini Client. Check API Key:{e}")
+        print(f"Failed to initialize Gemini Client. Check API Key:{e}🛑")
         gemini_client = None
 else:
     print("GEMINI_API_KEY not found in environment or .env file.")
@@ -54,7 +56,7 @@ try:
     feat_order = joblib.load("Feature_order.pkl")
     print("Model and Encoder loaded successfully.")
 except Exception as e:
-    print(f"Error loading Model or Encoder{e}")
+    print(f"Error loading Model or Encoder:{e}🛑")
     model = None
     ohe = None
     feat_order= None
@@ -124,7 +126,7 @@ async def predict(request: Request, data: InputData, background_tasks:Background
     #Process the input data
     input_df = processor._clean(input_df)
     processed_df = preprocessor_.preprocess_incident_data(input_df)
-    processed_df = input_df.reindex(columns = feat_order, fill_value = 0.0)
+    processed_df = input_df.reindex(columns = feat_order, fill_value = 0)
     
     #Feature Engineering
     processed_df["claim_to_premium_ratio"] = processed_df["total_claim_amount"] / (
@@ -168,8 +170,8 @@ async def predict(request: Request, data: InputData, background_tasks:Background
         )
         print('Narrative generated successfully')
     except Exception as e:
-        print(f'Error during ai generation:{e}')
-        genai_narrative = "Error generating narrative."
+        print(f'Error during ai generation:{e}🛑')
+        genai_narrative = "Error generating narrative.🛑"
 
     insert = False
 
@@ -178,7 +180,7 @@ async def predict(request: Request, data: InputData, background_tasks:Background
         print("Insertion added to background tasks.")
         insert = True
     except Exception as e:
-        print(f"Error occuerd while insertion:{e}")
+        print(f"Error occuerd while insertion:{e}🛑")
 
     #Generate SHAP Waterfall plot
     waterfall_plot_base64 = None
@@ -207,10 +209,10 @@ async def predict(request: Request, data: InputData, background_tasks:Background
                 plt_buf.close()
                 print('Plot saved successfully.')
             except Exception as e:
-                print(f"Error saving SHAP waterfall plot:{e}")
+                print(f"Error saving SHAP waterfall plot:{e}🛑")
 
     except Exception as e:
-        print(f"Error generating SHAP waterfall: {e}")
+        print(f"Error generating SHAP waterfall: {e}🛑🛑")
     
     # Return the prediction and explanations
     return {

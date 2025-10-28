@@ -14,9 +14,9 @@ class GenerateNarrative:
             print("SHAP Explainer Initialized")
             self.expected_value = self.explainer.expected_value
         except Exception as e:
-            print(f"Error initializing explainer:{e}")
+            print(f"Error initializing explainer:{e}🛑")
             self.explainer = None
-            self.expected_value = 0.0
+            self.expected_value = [0.0]
         
         
         
@@ -72,8 +72,8 @@ class GenerateNarrative:
             )
             return response.text
         except APIError as e:
-            return "API Error: Could not generate narrative."
+            return "API Error: Could not generate narrative.🛑"
         except Exception as e:
-            print(f"Error occured:{e}")
-            return "Unexpected error encountered. Cannot generate narrative."
+            print(f"Error occured:{e}🛑")
+            return "Unexpected error encountered. Cannot generate narrative.🛑"
     

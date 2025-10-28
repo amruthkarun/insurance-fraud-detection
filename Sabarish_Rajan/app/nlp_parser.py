@@ -20,7 +20,7 @@ class extract_incident_data():
                 self.gemini_client = genai.Client(api_key = self.GEMINI_KEY)
                 print('GenAI Client loaded successfully😊')
             except Exception as e:
-                print(f'Error loading Client: {e}')
+                print(f'Error loading Client: {e}🛑')
         
          
     required_features = [
@@ -124,7 +124,7 @@ class extract_incident_data():
                     return json_string
 
             except Exception as e:
-                print(f"API call failed on {tries+1}:{e}")
+                print(f"API call failed on {tries+1}:{e}🛑")
 
             if tries < (max_tries-1):
                 delay = 2**tries
@@ -142,7 +142,7 @@ class extract_incident_data():
         try:
             data = json.loads(json_string)
         except json.JSONDecodeError as e:
-            print(f"Error decoding JSON from LLM:{e}")
+            print(f"Error decoding JSON from LLM:{e}🛑")
             return {}
     
         final_data = {}
@@ -157,7 +157,7 @@ class extract_incident_data():
                     try:
                         final_data[feat] = int(float(value))
                     except (ValueError, TypeError):
-                        print(f'Warning: Could not convert {feat} with value {value} to integer. Setting to 0.')
+                        print(f'Warning: Could not convert {feat} with value {value} to integer. Setting to 0.🛑')
                         final_data[feat] = 0
             else:
                 if value is None or str(value).strip().lower() in ('null',''):
@@ -180,8 +180,8 @@ class extract_incident_data():
 
             structured_data = self.parse_and_validate_json(json_string)
         except Exception as e:
-            print(f'Error:{e}')
-            return f'Error:{e}'
+            print(f'Error:{e}🛑')
+            return f'Error:{e}🛑'
 
         return structured_data 
 
