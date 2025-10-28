@@ -1,6 +1,6 @@
 FROM python:3.10-slim
 
-WORKDIR C:\Users\aksme\Desktop\Insuarance_Fraud\insurance-fraud-detection\Sabarish_Rajan\Backend
+WORKDIR /app
 
 COPY requirements.txt
 
@@ -8,4 +8,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ['uvicorn', 'my_API_2', '--host', '0.0.0.0', '--port', '8000']
+CMD ['uvicorn', 'my_API_2:app', '--host', '0.0.0.0', '--port', '8000']
