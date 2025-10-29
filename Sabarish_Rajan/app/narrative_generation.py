@@ -8,9 +8,10 @@ class GenerateNarrative:
     def __init__(self, model_, gemini_client_):
         self.model = model_
         self.gemini_client = gemini_client_
-
+        #self.background_data = pd.read_csv('Fraud_detection.csv')
         try:
-            self.explainer = shap.TreeExplainer(self.model.named_steps["classifier"])
+            self.explainer = shap.TreeExplainer(self.model.named_steps["classifier"], #data = self.background_data
+            )
             print("SHAP Explainer Initialized")
             self.expected_value = self.explainer.expected_value
         except Exception as e:
