@@ -17,19 +17,19 @@ spec:
         image: postgres:14
         ports:
         - containerPort: 5432
-        env: # Use 'env' to map specific keys
+        env: 
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
               name: app-secret
-              key: DB_USER # Your key from the .env file
+              key: DB_USER 
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
               name: app-secret
-              key: DB_PASSWORD # Your key from the .env file
+              key: DB_PASSWORD 
         - name: POSTGRES_DB
           valueFrom:
             secretKeyRef:
               name: app-secret
-              key: DB_NAME # Your key from the .env file
+              key: DB_NAME
