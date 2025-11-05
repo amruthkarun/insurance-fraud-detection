@@ -27,52 +27,160 @@ Integrate PostgreSQL for storing claim data and risk assessments, utilizing thre
 **Source**: https://www.kaggle.com/datasets/arpan129/insurance-fraud-detection<br>
 **Description**: The dataset used for this analysis contains various features related to insurance claims, including policy details, customer information, accident specifics, and the target variable indicating whether a claim is fraudulent or not.
 
-## 3. Installation and Setup
+## 3. Features
+
+- **Web Interface:** A simple HTML/JavaScript frontend to submit new insurance claims.
+- **NLP Parsing:** Automatically extracts structured features (e.g., policy number, incident type) from an unstructured text description of the incident.
+- **ML-Powered Prediction:** Uses an XGBoost model to classify each claim as **"Genuine"** or **"Fraudulent"**.
+- **Explainable AI (XAI):** Generates SHAP (SHapley Additive exPlanations) values to understand _why_ the model made a specific prediction.
+- **Generative AI Narrative:** Uses the Gemini 2.5 Flash model to translate complex SHAP values into a simple, human-readable summary.
+- **Data Persistence:** All submitted claims and their predictions are stored in a PostgreSQL database.
+
+### Tech Stack
+
+- **Backend:** **FastAPI** (Python)
+- **Frontend:** **HTML**, **JavaScript** (served as templates by FastAPI)
+- **Database:** **PostgreSQL**
+- **Machine Learning:** **Scikit-learn** (for `OneHotEncoder`), **XGBoost**
+- **Explainability:** **SHAP**
+- **Generative AI:** **Google Gemini 2.5 Flash Preview**
+- **Containerization:** **Docker**, **Docker Compose**
+- **Orchestration:** **Kubernetes (K8s)**
+
+## 4. Application Flow
+
+Here is the step-by-step data flow when a user submits a claim:
+
+1.  **Submission:** A user fills out a form in the web UI, providing a text description of the incident.
+2.  **API Endpoint:** The form data is sent to a `POST` endpoint in the **FastAPI** backend.
+3.  **NLP Parsing:** The `nlp_parser.py` module extracts key features from the raw text.
+4.  **Database Insert:** The `insert_to_database.py` module logs the incoming claim data to the **PostgreSQL** database.
+5.  **Preprocessing:** The `preprocessor.py` module uses the saved `OneHotEncoder` to prepare the data for the model.
+6.  **Prediction:** The preprocessed data is fed into the loaded **XGBoost model** (`.pkl` file), which outputs a fraud probability.
+7.  **Explanation (XAI):** **SHAP** values are calculated to identify the top factors contributing to the model's decision.
+8.  **Narrative Generation:** The `narrative_generation.py` module sends these SHAP values to the **Gemini API** to generate a simple English explanation.
+9.  **Response:** The FastAPI backend returns the final prediction (e.g., "Fraud"), the probability score, and the AI-generated narrative to the user in the frontend.
+
+## 5. Getting Started
+
+You can run this project using Docker Compose (recommended for local testing) or Kubernetes (for a full deployment).
 
 ### Prerequisites
 
-- Python 3.10+
-- PostgreSQL running locally
-- Virtual Environment (venv)
+- [Git](https://git-scm.com/downloads)
+- [Docker](https://www.docker.com/products/docker-desktop/) & [Docker Compose](https://docs.docker.com/compose/install/)
+- (For K8s) [kubectl](https://kubernetes.io/docs/tasks/tools/)
+- (For K8s) [Minikube](https://minikube.sigs.k8s.io/docs/start/) or a cloud-based Kubernetes cluster.
+- A **Gemini API Key**.
 
-### Install Dependencies
+### 1. Using Docker Compose (Recommended)
 
-Main Libraries:
+1.  **Clone the repository:**
 
-- fastapi, uvicorn
-- xgboost, tensorflow, scikit-learn
-- pandas, numpy
-- joblib, shap
-- psycopg2, sqlalchemy
+    ```sh
+    git clone [your-repository-url]
+    cd [repository-name]
+    ```
 
-### Database Setup
+2.  **Create an environment file:**
+    Create a file named `.env` in the root directory and add your credentials.
 
-1. Create PostgreSQL database Insuauarance_fraud.
-2. Define a table claims
+    ```.env
+    # PostgreSQL Credentials
+    POSTGRES_USER=myuser
+    POSTGRES_PASSWORD=mypassword
+    POSTGRES_DB=fraud_db
+    POSTGRES_HOST=db
 
-### Running the Application
+    # Gemini API Key
+    GEMINI_API_KEY=YOUR_GEMINI_API_KEY_HERE
+    ```
 
-1. Train and load the ML model:
-   python Model.py
-   (this saves the model as ML_Model.pkl using joblib)
-2. Start FastAPI server:
-   uvicorn my_API:app --reload
-3. Open index.html on browser(make sure API url matches FastAPI endpoint).
+    _Note: The `docker-compose.yml` file is configured to use these variables._
 
-## 4. Project Structure
+3.  **Build and run the containers:**
 
-Frontend (index.html+JS)<br>
-|<br>
-v<br>
-Backend API (FastAPI, my_API.py)<br>
-| <br>
-+--> ML Model (XGBoost, Tensorflow) [model.py saved via joblib]<br>
-| <br>
-+--> Database (PostgreSQL)<br>
-| <br>
-+--> Explainability (SHAP)<br>
+    ```sh
+    docker-compose up -d --build
+    ```
 
-## 5. Model Performance and Results
+    This will build the `fastapi-app` image and pull the `postgres` image. The `-d` flag runs them in detached mode.
+
+4.  **Access the application:**
+    Open your browser and navigate to **`http://localhost:8000`**.
+
+### 2. Using Kubernetes
+
+1.  **Ensure your `kubectl` is configured** to point to your cluster (e.g., `minikube start`).
+
+2.  **Create a secret for your API key:**
+
+    ```sh
+    kubectl create secret generic gemini-api-key --from-literal=API_KEY=YOUR_GEMINI_API_KEY_HERE
+    ```
+
+    _(You will also need to create secrets for your database credentials or manage them with a `ConfigMap` and `StatefulSet` for production. The provided files assume this is set up)._
+
+3.  **Apply the Kubernetes configuration files:**
+    Apply the files in the correct order (database first, then the application).
+
+    ```sh
+    # Start the PostgreSQL Database
+    kubectl apply -f db-deployment.yaml
+    kubectl apply -f db-service.yaml
+
+    # Wait for the database to be fully running
+
+    # Deploy the FastAPI Application
+    kubectl apply -f deployment.yaml
+    kubectl apply -f app-service.yaml
+    ```
+
+4.  **Find your service URL:**
+    If you are using Minikube, you can expose the service:
+    ```sh
+    minikube service fraud-detection-service
+    ```
+    This will open the application in your browser.
+
+## 6. Project Structure
+
+A high-level overview of the key files and directories:
+
+- **Sabaris_Rajan/** (Project Root Directory)
+
+  - `app/` (FastAPI Application & Web Assets)
+
+    - `static/`
+    - `templates/`
+      - `index.html` (Frontend)
+    - `__pycache__/` (Ignorable Cache Folder)
+    - `.env` (Local Environment Variables)
+    - `app-service.yaml` (Kubernetes Service for FastAPI)
+    - `data_prep.py` (Data cleaning and feature engineering module)
+    - `data_preprocessor.pkl` (Fitted OneHotEncoder/Preprocessor Artifact)
+    - `db-deployment.yaml` (Kubernetes Deployment for PostgreSQL)
+    - `db-service.yaml` (Kubernetes Service for PostgreSQL)
+    - `deployment.yaml` (Kubernetes Deployment for FastAPI)
+    - `dockerfile` (Build blueprint for the FastAPI app)
+    - `Feature_order.pkl` (Artifact storing the expected feature list/order)
+    - `insert_to_database.py` (Module for DB insertion logic)
+    - `ML_Model.pkl` (Serialized XGBoost Model Artifact)
+    - `Model.py` (Likely the training script for the ML model)
+    - `my_API_2.py` (Main FastAPI application entry point)
+    - `narrative_generation.py` (Module for Gemini API calls)
+    - `nlp_parser.py` (Module to parse claim descriptions)
+    - `preprocessor.py` (Module for OneHotEncoding logic)
+    - `requirements.txt`
+
+  - `README.md`
+  - `Developer_Documentation.md`
+  - `data/`
+    - `Fraud_detection.csv` (Source Data File)
+  - `docker-compose.yml` (Docker Compose file for local development)
+  - `.dockerignore`
+
+## 7. Model Performance and Results
 
 | Model                              | Precision | Recall (Sensitivity) | F1-Score |
 | :--------------------------------- | :-------- | :------------------- | :------- |
@@ -80,38 +188,7 @@ Backend API (FastAPI, my_API.py)<br>
 | **Descision Tree Classifier**      | 0.46      | 0.70                 | 0.55     |
 | **Random Forest Classifier**       | 0.80      | 0.51                 | 0.61     |
 | **XGBoost Classifier**             | 0.64      | 0.82                 | 0.72     |
+| **XGBoost Classifier**             | 0.64      | 0.82                 | 0.72     |
 | **Neural Networks**                | 0.64      | 0.71                 | 0.67     |
 
-Key Findings : The XGBoost Classifier was identified as the best performing model. By using SMOTE oversampling and optimizing the final prediction threshold for the F1-Score, the model achieved an F1-Score of 0.72 on the test set. The high Recall (estimated around 0.84) indicates the model is highly effective at minimizing missed fraud cases (False Negatives), which is a critical priority in insurance fraud detection. The final model (ML_Model.pkl) and OneHotEncoder.pkl are saved for deployment.
-
-## 6. Deployment and API service
-
-The model is deployed using a FastAPI service for real-time analysis and explainability.
-
-**Service Details**(my_API.py):
-
-- Framework : FastAPI
-- Endpoints: POST /predict
-  - Accepts a JSON payload of claim data.
-  - Returns the fraud_probability, risk_level, an Returns the fraud_probability, risk_level, an AI-generated Narrative, and a base64 encoded SHAP Waterfall Plot.AI-generated Narrative, and a base64 encoded SHAP Waterfall Plot.
-- Data Logging:All new claims processed through the API are automatically inserted into the PostgreSQL table defined by DB_URL.
-
-**Explainability and Narrative**
-
-- SHAP (SHapley Additive exPlanations): Used to calculate feature contributions for each prediction, generating a waterfall plot to visualize which factors drove the result.
-- Gemini API: The integrated LLM acts as a "Fraud Analyst AI," consuming the prediction score and the top 5 SHAP drivers to generate a concise, professional justification for the risk prediction, including recommended actions.
-
-**Running the API**
-
-1. Ensure the prerequisites are ready.
-2. Start the FastAPI server:
-   uvicorn my_API:app --reload
-3. Access the web interface at http://127.0.0.1:8000/ to input data and receive predictions.
-
-## 7. Future Works
-
-- GenAI for Unstructured Data Processing: Utilize the GenAI integration to process and extract critical risk factors from unstructured text data, such as police reports, incident narratives, and adjuster notes, generating new, powerful features for the model.
-- Responsible AI Concepts: Implement a robust framework for assessing and mitigating model bias. This involves integrating fairness metrics to ensure ethical decision-making and non-discriminatory outcomes across different policyholder demographics.
-- External Risk Factor Enrichment: Incorporate external, real-time data sources (e.g., local disaster reports, economic indicators, or social media data) to create more comprehensive risk features.
-- Interactive Dashboard Enhancement: Expand the FastAPI application to include interactive dashboards (using Plotly/Bokeh) that display model performance, feature importance drift, and overall fraud trends over time.
-- Advanced Scaling and Concurrency: Enhance the data management and processing workflow by fully leveraging Python threading within the FastAPI application for efficient concurrent logging and complex batch risk assessments.
+Key Findings : The XGBoost Classifier was identified as the best performing model. By using SMOTE oversampling and optimizing the final prediction threshold for the F1-Score, the model achieved an F1-Score of 0.72 on the test set. The high Recall (estimated around 0.82) indicates the model is highly effective at minimizing missed fraud cases (False Negatives), which is a critical priority in insurance fraud detection. The final model (ML_Model.pkl) and OneHotEncoder.pkl are saved for deployment.
