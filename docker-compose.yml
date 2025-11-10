@@ -1,0 +1,29 @@
+
+services: 
+  web:
+   build: .
+   container_name: fast_api
+   restart: always
+   depends_on:
+    - db
+   environment:
+    - DATABASE_URL=postgresql://postgres:pw1234@db:5432/insurance
+
+   ports:
+    - "8000:8000"
+  
+  db:
+   image: postgres:15
+   container_name: postgres_db
+   restart: always
+   environment:
+     POSTGRES_USER: postgres
+     POSTGRES_PASSWORD: pw1234
+     POSTGRES_DB: insurance  
+   ports:
+     - "5432:5432"
+   volumes:
+     - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:    

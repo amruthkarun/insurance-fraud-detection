@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+pandas
+numpy
+scikit-learn
+xgboost
+seaborn
+matplotlib
+plotly
+sqlalchemy
+psycopg2-binary
+joblib
+google
+shap
+google-generativeai
+python-multipart

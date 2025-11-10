@@ -1,0 +1,218 @@
+Learning & Implementation Notes – Insurance Fraud Detection Project
+
+This document summarizes the concepts, tools, and methods I learned and implemented while developing my Insurance Fraud Detection System — from preprocessing to model explainability and containerized deployment using Docker.
+
+🧠 What I Learned
+1. FastAPI
+
+Learned to build REST APIs using FastAPI, a modern Python framework.
+
+Understood path operations (@app.get, @app.post) and form handling using Form().
+
+Served HTML forms, prediction pages, and interactive dashboards using HTMLResponse.
+
+Integrated Pydantic models for validation and structured data exchange between client and backend.
+
+2. SQLAlchemy & PostgreSQL
+
+Gained experience with Object Relational Mapping (ORM) concepts.
+
+Defined database models with declarative_base() and Column mappings.
+
+Connected FastAPI to a PostgreSQL database using SQLAlchemy’s create_engine().
+
+Automatically created tables and stored predictions in the database.
+
+3. Machine Learning & Model Explainability
+
+Built and tuned XGBoostClassifier for fraud detection, achieving recall up to 0.70.
+
+Learned to calculate SHAP values for explainable AI.
+
+Used Gemini-2.5-Flash to generate human-readable summaries of SHAP results, improving interpretability for end-users.
+
+⚙️ Implementation Overview
+🔹 Data Preprocessing (prepros.py)
+
+Loaded insurance_claims.csv, dropped missing values & irrelevant columns.
+
+Encoded categorical variables with LabelEncoder.
+
+Saved cleaned data as processed_test.csv.
+
+Visualized patterns using Seaborn and Matplotlib (heatmaps, countplots).
+
+🔹 Feature Selection
+
+To improve model performance and avoid noise from irrelevant features, I carefully selected a subset of features from the insurance claims dataset.
+
+Final feature set used for training:
+
+months_as_customer
+
+policy_deductable
+
+policy_annual_premium
+
+insured_sex
+
+insured_education_level
+
+insured_occupation
+
+insured_hobbies
+
+capital_gains
+
+capital_loss
+
+incident_type
+
+collision_type
+
+incident_severity
+
+authorities_contacted
+
+incident_hour_of_the_day
+
+number_of_vehicles_involved
+
+property_damage
+
+bodily_injuries
+
+witnesses
+
+police_report_available
+
+total_claim_amount
+
+injury_claim
+
+property_claim
+
+auto_model
+
+auto_year
+
+This reduced irrelevant/noisy features and led to higher recall (0.70).
+
+🔹 Model Training (model.py)
+
+Explored multiple ML algorithms: RandomForest, KNN, SVC, XGBoost.
+
+Compared cross-validation scores for model selection.
+
+Finalized XGBoostClassifier with tuned hyperparameters.
+
+Evaluated model using accuracy, precision, recall, F1-score, confusion matrix.
+
+Saved trained model (model.pkl) with Joblib.
+
+Cross-Validation Results (10-fold CV)
+Model	Mean Accuracy
+RandomForest	~0.74
+K-Nearest Neighbors	~0.66
+Support Vector Classifier	~0.73
+XGBoost	~0.80–0.82
+
+XGBoost clearly outperformed others with best accuracy & recall.
+
+Recall Improvement Experiments
+
+Model 1: n_estimators=100, learning_rate=0.15, max_depth=4 → Recall 0.58
+
+Model 2: n_estimators=200, learning_rate=0.20, max_depth=4 → Recall 0.70
+
+Model 3: n_estimators=250, learning_rate=0.25, max_depth=4 → Recall 0.70
+
+Increasing trees boosted recall from 0.58 → 0.70. Beyond 200, recall plateaued.
+Final model chosen: XGBClassifier(n_estimators=250, learning_rate=0.25, max_depth=4) with recall 0.70.
+
+🔹 Explainability Feature
+
+Used SHAP to compute feature contribution values for each prediction.
+Integrated Gemini-2.5-Flash to summarize these SHAP values using this prompt:
+
+“The insurance fraud detection model predicted: '{prediction_label}'.
+The following input features had the strongest influence on the decision:
+{summary}
+Explain this reasoning clearly in simple, transparent language (under 200 words).
+Write two paragraphs:
+
+First explains the SHAP values and reason for the outcome.
+
+Second suggests how the model could yield a better outcome and what changes could be made.”
+
+This produced concise, human-readable explanations of why a claim was flagged as fraudulent and how changes in features could affect future predictions.
+
+🌐 Web Application (main.py)
+
+Created FastAPI endpoints:
+
+/ → Homepage
+
+/predict → Interactive fraud prediction form
+
+/dashboard → Plotly dashboard for visualization
+
+Stored user inputs and prediction outcomes in PostgreSQL.
+
+Used Plotly for real-time data charts (bar, pie, choropleth).
+
+Integrated Gemini summaries to enhance model transparency for end-users.
+
+🐳 Docker Containerization
+Docker Integration
+
+To ensure reproducibility and simplify deployment, the project was containerized using Docker.
+
+Created a Dockerfile for building the FastAPI application container.
+
+Configured a docker-compose.yml file for orchestrating FastAPI + PostgreSQL services.
+
+Both containers share a network bridge to allow seamless API–DB communication.
+
+Steps:
+# Build the container
+docker build -t insurance-fraud-app .
+
+# Run the container
+docker run -d -p 8000:8000 insurance-fraud-app
+
+# Or run both app + DB together
+docker-compose up --build
+
+
+The app runs at http://localhost:8000
+, and PostgreSQL is available on port 5432.
+Official Docker reference: https://docs.docker.com/manuals/
+
+🔗 References & Repository
+FastAPI : https://fastapi.tiangolo.com/learn/
+SQLAlchemy: https://www.sqlalchemy.org/
+Official Docker Docs: https://docs.docker.com/manuals/
+Project Repository: https://github.com/joel-ginu-mathew/generative-ai-for-beginners
+
+
+
+💡 Key Skills Gained
+
+End-to-end ML pipeline: data cleaning → model training → evaluation → deployment.
+
+Building FastAPI applications with HTML integration.
+
+Working with SQLAlchemy ORM and PostgreSQL databases.
+
+Creating explainable AI modules using SHAP + Gemini.
+
+Docker containerization for reproducible deployments.
+
+Interactive data dashboards with Plotly.
+
+🧩 Reflection
+
+Through this project, I gained confidence in connecting machine learning models with real-world deployment workflows.
+I learned to make AI systems not only accurate but also transparent and interpretable.
+Containerization with Docker and explainability via Gemini made the project production-ready and user-centric — aligning technical rigor with ethical AI communication.
