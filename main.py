@@ -24,7 +24,7 @@ with open("model.pkl", "rb") as f:
 
 
 # Initialize gemini 
-os.environ["GOOGLE_API_KEY"] = "AIzaSyAXZEFOMDHC1cuW7V7UnbrkX8xpAMww4_Y"  
+os.environ["GOOGLE_API_KEY"] = ""  
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 
@@ -668,4 +668,5 @@ def dashboard():
     """
 
     return HTMLResponse(content=dashboard_html)
+
 
